@@ -4,7 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/force-lab-3d/",
+  base: process.env.GITHUB_ACTIONS ? "/force-lab-3d/" : "/",
   plugins: [
     react(),
     VitePWA({
