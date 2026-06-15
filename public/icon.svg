@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#0E1626"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#27395B" stroke-width="10"/>
+  <!-- reação (azul) para cima/direita -->
+  <g stroke="#4D9FFF" stroke-width="26" stroke-linecap="round" fill="#4D9FFF">
+    <line x1="256" y1="256" x2="372" y2="140"/>
+    <path d="M372 140 L322 150 L362 190 Z"/>
+  </g>
+  <!-- ação (vermelho) para baixo/esquerda -->
+  <g stroke="#FF4D5E" stroke-width="26" stroke-linecap="round" fill="#FF4D5E">
+    <line x1="256" y1="256" x2="140" y2="372"/>
+    <path d="M140 372 L190 362 L150 322 Z"/>
+  </g>
+  <!-- normal (verde) para cima -->
+  <g stroke="#2DD4A7" stroke-width="20" stroke-linecap="round" fill="#2DD4A7">
+    <line x1="180" y1="300" x2="180" y2="200"/>
+    <path d="M180 200 L165 232 L195 232 Z"/>
+  </g>
+  <circle cx="256" cy="256" r="20" fill="#E8EEF7"/>
+</svg>
