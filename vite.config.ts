@@ -4,6 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/force-lab-3d/",
   plugins: [
     react(),
     VitePWA({
@@ -19,7 +20,7 @@ export default defineConfig({
         background_color: "#0E1626",
         display: "standalone",
         orientation: "any",
-        start_url: "/",
+        start_url: "/force-lab-3d/",
         icons: [
           {
             src: "icon.svg",
