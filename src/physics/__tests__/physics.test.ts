@@ -66,21 +66,43 @@ describe("Carro — tração limitada por atrito", () => {
   });
 });
 
-describe("Revólver — conservação de momento e energia da pólvora", () => {
-  it("no vácuo, |p_bala| = |p_arma| e a energia NÃO se conserva", () => {
+describe("Fuzil .50 — conservação de momento e energia da pólvora", () => {
+  it("no vácuo com freio de boca, |p_arma| ≈ MUZZLE_BRAKE × |p_bala| e keBala >> keArma", () => {
     const env = makeEnvironment("vacuo", "asfalto");
-    const params = { massaBala: 8, velBala: 380, massaArma: 1.5 };
+    // Valores reais do .50 BMG M33 Ball (Barrett M82A1): 42 g a 890 m/s, arma 14 kg
+    const params = { massaBala: 42, velBala: 890, massaArma: 14 };
     const s = revolver.init(env, params);
     const fire = { ...emptyControls(), fire: true };
     revolver.step(s, env, params, fire, 0.016);
-    const mB = 8 / 1000;
-    const pBala = mB * 380;
+    const mB = 42 / 1000;
+    const pBala = mB * 890;                   // ≈ 37.38 kg·m/s
     const recoilSpeed = Math.hypot(s.gunVx, s.gunVy);
-    const pArma = 1.5 * recoilSpeed;
-    expect(pArma).toBeCloseTo(pBala, 6);
-    const keBala = 0.5 * mB * 380 ** 2;
-    const keArma = 0.5 * 1.5 * recoilSpeed ** 2;
+    const pArma = 14 * recoilSpeed;
+    const MUZZLE_BRAKE = 0.38;
+    // Freio de boca absorve ~62 % do recuo; a arma recebe apenas MUZZLE_BRAKE × p_bala
+    expect(pArma).toBeCloseTo(pBala * MUZZLE_BRAKE, 5);
+    const keBala = 0.5 * mB * 890 ** 2;      // ≈ 17 kJ
+    const keArma = 0.5 * 14 * recoilSpeed ** 2;
+    // Projétil supersônico carrega muito mais energia cinética que a arma
     expect(keBala).toBeGreaterThan(keArma * 5);
+  });
+
+  it("Cd cresce no transônico e cai no supersônico (curva real do M33)", () => {
+    // O arrasto na Terra deve frear a bala mais rápido que o modelo de Cd constante.
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { massaBala: 42, velBala: 890, massaArma: 14 };
+    const s = revolver.init(env, params);
+    revolver.step(s, env, params, { ...emptyControls(), fire: true }, 0.001);
+    // Desaceleração inicial por arrasto: a ≈ ½ρv²·Cd·A / m, com Cd(Mach 2,6) ≈ 0,30.
+    // Avança um passo curto e mede a perda de velocidade horizontal só por arrasto.
+    const v0 = Math.hypot(s.bulletVx, s.bulletVy);
+    const before = s.bulletVx;
+    revolver.step(s, env, params, emptyControls(), 0.001);
+    const decel = (before - s.bulletVx) / 0.001; // m/s²
+    // Esperado ~430–470 m/s² (vs. ~380 com o antigo Cd = 0,25).
+    expect(decel).toBeGreaterThan(400);
+    expect(decel).toBeLessThan(520);
+    expect(v0).toBeGreaterThan(880);
   });
 });
 

@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { L } from "./physics";
 import { Engine } from "./scene/Engine";
 import { Experience } from "./scene/Experience";
-import { BottomBar, SidePanel, TopBar } from "./ui/Controls";
+import { ActionBar, BottomBar, SidePanel, TopBar } from "./ui/Controls";
 import { Hud } from "./ui/Hud";
 import { runtime } from "./scene/runtime";
 import { useStore } from "./state/store";
@@ -61,7 +61,10 @@ export default function App() {
           <div className="mid" />
           <Hud />
         </div>
-        <BottomBar />
+        <div className="bottom-stack">
+          <ActionBar />
+          <BottomBar />
+        </div>
       </div>
 
       {/* Recolher/mostrar painéis — visível só no mobile (CSS) */}

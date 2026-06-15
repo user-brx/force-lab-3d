@@ -32,6 +32,17 @@ export interface Readout {
   highlight?: boolean;
 }
 
+/** Um rótulo flutuante 3D, ancorado a um ponto da cena (ex.: bala em voo). */
+export interface SceneLabel {
+  at: Vec3;
+  /** Linha principal (destaque). */
+  title: string;
+  /** Linha secundária (opcional). */
+  subtitle?: string;
+  /** Cor da borda e do título (hex). */
+  color?: string;
+}
+
 /** Uma série numérica para o gráfico em tempo real. */
 export interface Metric {
   label: string;
@@ -92,6 +103,8 @@ export interface SceneView {
   forces: ForceArrow[];
   readouts: Readout[];
   bars: Bar[];
+  /** Rótulos flutuantes 3D (opcional). */
+  labels?: SceneLabel[];
   /** Séries para o gráfico em tempo real (opcional). */
   metrics?: Metric[];
   /** Aviso contextual (ex.: "TWR < 1, não decola"). */

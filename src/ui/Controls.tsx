@@ -22,7 +22,7 @@ export function TopBar() {
   return (
     <div className="topbar">
       <div className="brand">
-        <h1>{L("Laboratório de Forças 3D", "3D Force Lab")}</h1>
+        <h1>{L("Lab de Forças", "Force Lab")}</h1>
         <p>{L("Veja, em tempo real, de onde vem cada força.", "See, in real time, where every force comes from.")}</p>
       </div>
       <div className="chips">
@@ -121,8 +121,6 @@ export function SidePanel() {
   const setSurface = useStore((s) => s.setSurface);
   const params = useStore((s) => s.params[s.scenarioId]);
   const setParam = useStore((s) => s.setParam);
-  const hold = useStore((s) => s.hold);
-  const toggleHold = useStore((s) => s.toggleHold);
   useStore((s) => s.lang);
 
   const sc = SCENARIOS[scenarioId];
@@ -185,35 +183,78 @@ export function SidePanel() {
           </div>
         )}
 
-        {scenarioId === "foguete" && (
-          <div className="btn-row" style={{ marginTop: 10 }}>
-            <HoldButton dir="left" label={L("◀ inclinar", "◀ tilt")} />
-            <HoldButton dir="right" label={L("inclinar ▶", "tilt ▶")} />
-          </div>
-        )}
-        {scenarioId === "revolver" && (
-          <div className="btn-row" style={{ marginTop: 10 }}>
-            <button className="btn fire" onClick={() => (runtime.input.fire = true)}>
-              🔫 {L("Disparar", "Fire")}
-            </button>
-            <button className={`btn ${hold ? "on" : ""}`} onClick={toggleHold}>
-              ✋ {L("Segurar", "Hold")}
-            </button>
-            <button className="btn fire" onClick={() => (runtime.input.matrixFire = true)}>
-              ⏱️ {L("Matrix", "Matrix")}
-            </button>
-          </div>
-        )}
-        {scenarioId === "patinadores" && (
-          <div className="btn-row" style={{ marginTop: 10 }}>
-            <button className="btn fire" onClick={() => (runtime.input.fire = true)}>
-              👐 {L("Empurrar / Reiniciar", "Push / Reset")}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
+}
+
+export function ActionBar() {
+  const scenarioId = useStore((s) => s.scenarioId);
+  const hold = useStore((s) => s.hold);
+  const toggleHold = useStore((s) => s.toggleHold);
+  const planetId = useStore((s) => s.planetId);
+  const surfaceId = useStore((s) => s.surfaceId);
+  const setSurface = useStore((s) => s.setSurface);
+  useStore((s) => s.lang);
+
+  const hasGravity = PLANETS[planetId].g > 0;
+  const sc = SCENARIOS[scenarioId];
+
+  if (scenarioId === "revolver") {
+    return (
+      <div className="actionbar">
+        {hasGravity && sc.surfaces.length > 0 && (
+          <div>
+            {sc.surfaces.map((id) => (
+              <button
+                key={id}
+                className={`btn ${surfaceId === id ? "on" : ""}`}
+                onClick={() => setSurface(id)}
+              >
+                {surfaceLabel(SURFACES[id])}
+              </button>
+            ))}
+          </div>
+        )}
+        <div>
+          <button className="btn fire" onClick={() => (runtime.input.fire = true)}>
+            🎯 {L("Disparar", "Fire")}
+          </button>
+          <button className={`btn ${hold ? "on" : ""}`} onClick={toggleHold}>
+            ✋ {L("Segurar", "Hold")}
+          </button>
+          <button className="btn fire" onClick={() => (runtime.input.matrixFire = true)}>
+            ⏱️ {L("Matrix", "Matrix")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (scenarioId === "foguete") {
+    return (
+      <div className="actionbar">
+        <div>
+          <HoldButton dir="left" label={L("◀ Inclinar", "◀ Tilt")} />
+          <HoldButton dir="right" label={L("Inclinar ▶", "Tilt ▶")} />
+        </div>
+      </div>
+    );
+  }
+
+  if (scenarioId === "patinadores") {
+    return (
+      <div className="actionbar">
+        <div>
+          <button className="btn fire" onClick={() => (runtime.input.fire = true)}>
+            👐 {L("Empurrar / Reiniciar", "Push / Reset")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 export function BottomBar() {

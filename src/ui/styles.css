@@ -47,6 +47,7 @@ body,
    o canvas (girar/zoom da câmera funcionam nas áreas vazias). */
 .chips,
 .panel,
+.actionbar,
 .bottombar,
 .langtoggle,
 .panel-toggle {
@@ -431,6 +432,32 @@ input[type="range"]::-moz-range-thumb {
   color: var(--ink);
 }
 
+/* Agrupa ActionBar + BottomBar para sempre ficarem juntos no fundo do overlay */
+.bottom-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Barra de ações do cenário (Disparar, Inclinar, Empurrar…) */
+.actionbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Cada linha interna da actionbar */
+.actionbar > div {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.actionbar .btn {
+  flex: 1;
+  max-width: 200px;
+}
+
 /* Controles inferiores */
 .bottombar {
   display: flex;
@@ -511,7 +538,16 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 760px) {
   .overlay {
     padding: 8px;
+    gap: 6px;
+  }
+
+  /* Topbar: brand+langtoggle na 1ª linha, chips na 2ª linha (full-width) */
+  .topbar {
+    align-items: center;
     gap: 8px;
+  }
+  .brand {
+    flex: 1;
   }
   .brand h1 {
     font-size: 15px;
@@ -519,8 +555,9 @@ input[type="range"]::-moz-range-thumb {
   .brand p {
     display: none;
   }
-  /* chips em uma única linha rolável */
   .chips {
+    order: 3;
+    flex: 0 0 100%;
     flex-wrap: nowrap;
     overflow-x: auto;
     justify-content: flex-start;
@@ -531,10 +568,31 @@ input[type="range"]::-moz-range-thumb {
     display: none;
   }
   .chip {
-    padding: 7px 10px;
+    padding: 8px 11px;
     font-size: 12px;
     flex: 0 0 auto;
+    min-height: 38px;
   }
+
+  /* Touch targets maiores para botões */
+  .btn {
+    min-height: 44px;
+    padding: 12px 10px;
+  }
+
+  /* Slider mais fácil de tocar com o dedo */
+  input[type="range"] {
+    height: 8px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+  }
+
   .cols {
     flex-direction: column;
     align-items: stretch;
@@ -558,6 +616,7 @@ input[type="range"]::-moz-range-thumb {
     display: flex;
     align-items: center;
     justify-content: center;
+    bottom: 108px; /* acima da actionbar (~52px) + bottombar (~44px) */
   }
   .panel {
     padding: 11px;
@@ -565,8 +624,22 @@ input[type="range"]::-moz-range-thumb {
   .graph {
     height: 80px;
   }
+  /* Bottombar em rolagem horizontal — evita 2 linhas e sobreposição com o toggle */
+  .bottombar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .bottombar::-webkit-scrollbar {
+    display: none;
+  }
   .bottombar .btn {
-    padding: 7px 9px;
+    flex: 0 0 auto;
+    padding: 8px 11px;
     font-size: 12px;
+    min-height: 40px;
+    white-space: nowrap;
   }
 }

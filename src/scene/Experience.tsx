@@ -9,6 +9,7 @@ import { runtime } from "./runtime";
 import { toScene } from "./transform";
 import { Bodies } from "./Bodies";
 import { Arrows } from "./Arrows";
+import { Labels } from "./Labels";
 import { Particles } from "./Particles";
 import { ShockWaves } from "./ShockWaves";
 
@@ -224,6 +225,7 @@ export function Experience() {
       <SpaceReference />
       <Bodies />
       <Arrows />
+      <Labels />
       <Particles />
       <ShockWaves />
       <CameraRig />

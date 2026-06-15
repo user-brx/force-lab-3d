@@ -244,41 +244,76 @@ RocketModel.displayName = "RocketModel";
 
 export const RevolverModel = forwardRef<THREE.Group, object>((_, ref) => (
   <group ref={ref}>
-    {/* carrinho */}
+    {/* Plataforma do carrinho */}
     <mesh position={[0, -0.18, 0]} castShadow>
-      <boxGeometry args={[1.4, 0.18, 0.7]} />
+      <boxGeometry args={[1.5, 0.15, 0.65]} />
       <meshStandardMaterial color="#566385" metalness={0.4} roughness={0.5} />
     </mesh>
-    {[
-      [-0.5, -0.34, 0.38],
-      [-0.5, -0.34, -0.38],
-      [0.5, -0.34, 0.38],
-      [0.5, -0.34, -0.38],
-    ].map((p, i) => (
-      <mesh key={i} position={p as [number, number, number]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+    {/* Rodas */}
+    {([ [-0.55, -0.34, 0.36], [-0.55, -0.34, -0.36], [0.55, -0.34, 0.36], [0.55, -0.34, -0.36] ] as [number,number,number][]).map((p, i) => (
+      <mesh key={i} position={p} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <cylinderGeometry args={[0.13, 0.13, 0.12, 20]} />
         <meshStandardMaterial color="#2a2e38" roughness={0.85} />
       </mesh>
     ))}
-    {/* corpo da arma */}
-    <mesh position={[-0.05, 0.12, 0]} castShadow>
-      <boxGeometry args={[0.5, 0.2, 0.16]} />
-      <meshStandardMaterial color="#aab2c4" metalness={0.85} roughness={0.3} emissive="#1a2030" emissiveIntensity={0.3} />
+    {/* Receptor / corpo principal */}
+    <mesh position={[0, 0.13, 0]} castShadow>
+      <boxGeometry args={[0.70, 0.17, 0.16]} />
+      <meshStandardMaterial color="#1e2430" metalness={0.75} roughness={0.4} />
     </mesh>
-    {/* cano */}
-    <mesh position={[0.35, 0.15, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-      <cylinderGeometry args={[0.05, 0.05, 0.5, 20]} />
-      <meshStandardMaterial color="#cdd4e0" metalness={0.9} roughness={0.25} emissive="#1a2030" emissiveIntensity={0.3} />
+    {/* Cano longo do .50 BMG (≈ 73 cm) — tip at x ≈ 1.05 */}
+    <mesh position={[0.70, 0.15, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <cylinderGeometry args={[0.022, 0.022, 0.70, 16]} />
+      <meshStandardMaterial color="#aab2c4" metalness={0.92} roughness={0.22} />
     </mesh>
-    {/* tambor */}
-    <mesh position={[0.02, 0.12, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-      <cylinderGeometry args={[0.11, 0.11, 0.14, 20]} />
-      <meshStandardMaterial color="#b7bfce" metalness={0.85} roughness={0.3} />
+    {/* Freio de boca (muzzle brake) */}
+    <mesh position={[1.07, 0.15, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <cylinderGeometry args={[0.038, 0.038, 0.06, 12]} />
+      <meshStandardMaterial color="#ccd3e0" metalness={0.88} roughness={0.28} />
     </mesh>
-    {/* punho */}
-    <mesh position={[-0.28, -0.02, 0]} rotation={[0, 0, 0.4]} castShadow>
-      <boxGeometry args={[0.13, 0.34, 0.13]} />
-      <meshStandardMaterial color="#5a3a2a" roughness={0.7} />
+    {/* Ranhuras do freio de boca */}
+    {([-0.015, 0.015] as number[]).map((xOff, i) => (
+      <mesh key={i} position={[1.07 + xOff, 0.15, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.042, 0.042, 0.007, 12]} />
+        <meshStandardMaterial color="#9aa2b0" metalness={0.85} roughness={0.3} />
+      </mesh>
+    ))}
+    {/* Luneta */}
+    <mesh position={[0.06, 0.265, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <cylinderGeometry args={[0.030, 0.030, 0.44, 14]} />
+      <meshStandardMaterial color="#1a1e26" metalness={0.65} roughness={0.5} />
+    </mesh>
+    {/* Montagens da luneta */}
+    {([0.0, 0.18] as number[]).map((x, i) => (
+      <mesh key={i} position={[x, 0.213, 0]} castShadow>
+        <boxGeometry args={[0.04, 0.07, 0.055]} />
+        <meshStandardMaterial color="#1a1e26" metalness={0.7} roughness={0.4} />
+      </mesh>
+    ))}
+    {/* Bipé — perna esquerda */}
+    <mesh position={[0.50, -0.06, 0.16]} rotation={[0.28, 0, 0.08]} castShadow>
+      <boxGeometry args={[0.022, 0.38, 0.022]} />
+      <meshStandardMaterial color="#2a2e38" metalness={0.6} roughness={0.5} />
+    </mesh>
+    {/* Bipé — perna direita */}
+    <mesh position={[0.50, -0.06, -0.16]} rotation={[-0.28, 0, 0.08]} castShadow>
+      <boxGeometry args={[0.022, 0.38, 0.022]} />
+      <meshStandardMaterial color="#2a2e38" metalness={0.6} roughness={0.5} />
+    </mesh>
+    {/* Punho de pistola */}
+    <mesh position={[0.20, -0.01, 0]} rotation={[0, 0, 0.28]} castShadow>
+      <boxGeometry args={[0.10, 0.25, 0.11]} />
+      <meshStandardMaterial color="#2e2018" roughness={0.8} />
+    </mesh>
+    {/* Coronha (stock) */}
+    <mesh position={[-0.60, 0.12, 0]} castShadow>
+      <boxGeometry args={[0.32, 0.13, 0.14]} />
+      <meshStandardMaterial color="#1a1e26" metalness={0.5} roughness={0.55} />
+    </mesh>
+    {/* Descanso de bochecha */}
+    <mesh position={[-0.54, 0.215, 0]} castShadow>
+      <boxGeometry args={[0.26, 0.065, 0.10]} />
+      <meshStandardMaterial color="#252a36" metalness={0.4} roughness={0.65} />
     </mesh>
   </group>
 ));
