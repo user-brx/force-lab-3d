@@ -1,6 +1,6 @@
 import { type ComponentRef, useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, Grid, OrbitControls, Sky, Stars } from "@react-three/drei";
+import { ContactShadows, Environment, Grid, Lightformer, OrbitControls, Sky, Stars } from "@react-three/drei";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { PLANETS, SURFACES } from "../physics";
@@ -30,16 +30,6 @@ const PAD_COLOR = "#4a4f57"; // plataforma de concreto do foguete
 const CAM_FOLLOW = 11;
 const _desired = new THREE.Vector3();
 const _delta = new THREE.Vector3();
-
-// HDRI preset por planeta — leve, sem fundo.
-const ENV_PRESET: Record<string, string> = {
-  vacuo: "night",
-  lua: "night",
-  marte: "dawn",
-  venus: "sunset",
-  terra: "city",
-  jupiter: "sunset",
-};
 
 function CameraRig() {
   const { camera } = useThree();
@@ -184,18 +174,23 @@ function SpaceReference() {
   return <group>{rings}</group>;
 }
 
-// Iluminação HDRI leve — só reflexos, sem fundo pesado.
+// Ambiente de reflexos 100 % procedural (sem rede): painéis de luz (Lightformers)
+// geram o mapa de reflexão uma única vez (frames={1}). Antes usava HDRI de CDN,
+// o que quebrava o offline e causava flicker no iPhone a cada troca de planeta.
 function DynamicEnvironment() {
-  const planetId = useStore((s) => s.planetId);
-  const preset = (ENV_PRESET[planetId] ?? "city") as
-    "apartment" | "city" | "dawn" | "forest" | "lobby" | "night" | "park" | "studio" | "sunset" | "warehouse";
-
   return (
-    <Environment
-      preset={preset}
-      background={false}
-      environmentIntensity={0.6}
-    />
+    <Environment resolution={256} frames={1} environmentIntensity={0.55}>
+      {/* teto frio amplo (luz-chave) */}
+      <Lightformer intensity={1.4} color="#cfe0ff" position={[0, 6, -8]} scale={[14, 10, 1]} />
+      {/* preenchimento lateral esquerdo */}
+      <Lightformer intensity={0.7} color="#ffffff" rotation={[0, Math.PI / 2, 0]} position={[-6, 1, 0]} scale={[12, 6, 1]} />
+      {/* preenchimento lateral direito */}
+      <Lightformer intensity={0.7} color="#ffffff" rotation={[0, -Math.PI / 2, 0]} position={[6, 1, 0]} scale={[12, 6, 1]} />
+      {/* realce frontal azulado */}
+      <Lightformer intensity={0.5} color="#a8c6ff" rotation={[Math.PI / 2, 0, 0]} position={[0, 4, 6]} scale={[10, 10, 1]} />
+      {/* base escura para contraste embaixo */}
+      <Lightformer intensity={0.25} color="#1a2740" rotation={[-Math.PI / 2, 0, 0]} position={[0, -4, 0]} scale={[14, 14, 1]} />
+    </Environment>
   );
 }
 

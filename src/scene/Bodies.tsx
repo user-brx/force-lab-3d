@@ -45,7 +45,10 @@ export function Bodies() {
       {scenarioId === "revolver" && (
         <>
           <RevolverModel ref={reg("gun")} />
-          <BulletModel ref={reg("bullet")} />
+          {/* Pool de balas: várias podem estar no ar ao mesmo tempo (= MAX_BULLETS). */}
+          {Array.from({ length: 16 }, (_, i) => (
+            <BulletModel key={i} ref={reg(`bullet${i}`)} />
+          ))}
         </>
       )}
       {scenarioId === "patinadores" && (

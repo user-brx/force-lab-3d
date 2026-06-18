@@ -9,6 +9,7 @@ import type { Scenario, SceneView, ShockEmit } from "../types";
 
 interface SkaterState {
   t: number;
+  armed: boolean; // só empurram depois de apertar "Empurrar" (Reiniciar deixa parados)
   x1: number;
   v1: number;
   x2: number;
@@ -18,7 +19,7 @@ interface SkaterState {
   events: ShockEmit[];
 }
 
-const PUSH_START = 0.6; // s
+const PUSH_START = 0.35; // s (pequena espera antes do empurrão, ao apertar o botão)
 const PUSH_DUR = 0.4; // s
 const GAP = 0.55; // meia-distância inicial entre eles (m)
 
@@ -29,18 +30,21 @@ export const skaters: Scenario<SkaterState> = {
   icon: "⛸️",
   blurb: "Mesma força, massas diferentes: o leve dispara, o pesado mal anda.",
   surfaces: ["gelo", "asfalto"],
-  defaultPlanet: "vacuo",
+  defaultPlanet: "terra",
   params: {
     massaA: { label: "Massa (azul)", labelEn: "Mass (blue)", min: 30, max: 120, step: 1, default: 60, unit: "kg" },
     massaB: { label: "Massa (vermelho)", labelEn: "Mass (red)", min: 30, max: 120, step: 1, default: 90, unit: "kg" },
     forca: { label: "Força do empurrão", labelEn: "Push force", min: 100, max: 600, step: 10, default: 300, unit: "N" },
   },
 
-  init: () => ({ t: 0, x1: -GAP, v1: 0, x2: GAP, v2: 0, F: 0, prevPushing: false, events: [] }),
+  init: () => ({ t: 0, armed: false, x1: -GAP, v1: 0, x2: GAP, v2: 0, F: 0, prevPushing: false, events: [] }),
 
   step(s, env, params, c, dt) {
+    // "Empurrar" reinicia as posições e dispara o empurrão. "Reiniciar" (reset
+    // global) recria o estado com armed=false: ficam parados até apertar Empurrar.
     if (c.fire) {
       s.t = 0;
+      s.armed = true;
       s.x1 = -GAP;
       s.x2 = GAP;
       s.v1 = 0;
@@ -51,7 +55,7 @@ export const skaters: Scenario<SkaterState> = {
     const F = params.forca ?? 300;
     s.t += dt;
 
-    const pushing = s.t >= PUSH_START && s.t < PUSH_START + PUSH_DUR;
+    const pushing = s.armed && s.t >= PUSH_START && s.t < PUSH_START + PUSH_DUR;
     s.F = pushing ? F : 0;
 
     let a1 = 0;
@@ -139,17 +143,19 @@ export const skaters: Scenario<SkaterState> = {
         { label: L("Veloc. azul", "Blue speed"), value: Math.abs(s.v1), unit: "m/s", color: "#4D9FFF" },
         { label: L("Veloc. vermelho", "Red speed"), value: Math.abs(s.v2), unit: "m/s", color: "#FF5A4D" },
       ],
-      note: pushing
-        ? L("Empurrando: a mesma força nos dois. O azul (mais leve) acelera mais.", "Pushing: the same force on both. Blue (lighter) accelerates more.")
-        : env.g > 0
-          ? L(
-              "Soltaram. O atrito (força externa) freia os dois e retira momento — por isso o total deixa de ser zero.",
-              "They let go. Friction (an external force) slows both and removes momentum — so the total stops being zero.",
-            )
-          : L(
-              "Soltaram. Sistema isolado: o momento total continua exatamente zero, para sempre.",
-              "They let go. Isolated system: total momentum stays exactly zero, forever.",
-            ),
+      note: !s.armed
+        ? L("Pressione EMPURRAR para os patinadores se empurrarem.", "Press PUSH to make the skaters shove each other.")
+        : pushing
+          ? L("Empurrando: a mesma força nos dois. O azul (mais leve) acelera mais.", "Pushing: the same force on both. Blue (lighter) accelerates more.")
+          : env.g > 0
+            ? L(
+                "Soltaram. O atrito (força externa) freia os dois e retira momento - por isso o total deixa de ser zero.",
+                "They let go. Friction (an external force) slows both and removes momentum - so the total stops being zero.",
+              )
+            : L(
+                "Soltaram. Sistema isolado: o momento total continua exatamente zero, para sempre.",
+                "They let go. Isolated system: total momentum stays exactly zero, forever.",
+              ),
       source: L(
         "A força que o azul faz no vermelho é idêntica à que o vermelho faz no azul (3ª lei). " +
           "Como a = F/m, o mais leve sai mais rápido. Os momentos são iguais e opostos e somam zero.",

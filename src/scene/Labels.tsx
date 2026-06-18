@@ -7,7 +7,7 @@ import { runtime } from "./runtime";
 
 // Rótulos flutuantes 3D ancorados a um ponto da cena (ex.: velocidade/distância
 // sobre a bala em voo). Pool de sprites reutilizados, sem alocação por frame.
-const POOL = 3;
+const POOL = 6;
 
 interface Label {
   sprite: THREE.Sprite;

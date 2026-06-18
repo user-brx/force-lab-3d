@@ -8,7 +8,7 @@ import type { Scenario, SceneView, ShockEmit } from "../types";
 // Os músculos aplicam uma força contra o chão para manter a velocidade de
 // caminhada, vencendo uma resistência (ar + perdas). O atrito estático limita
 // quanto dessa força vira propulsão. 3ª lei: a MESMA força de propulsão vai
-// para o astro — que mal acelera (massa enorme).
+// para o astro - que mal acelera (massa enorme).
 
 interface PersonState {
   x: number;
@@ -32,7 +32,7 @@ export const person: Scenario<PersonState> = {
   label: "Pessoa",
   labelEn: "Person",
   icon: "🚶",
-  blurb: "Ação e reação no caminhar — e por que o chão não se move.",
+  blurb: "Ação e reação no caminhar - e por que o chão não se move.",
   surfaces: ["asfalto", "gelo", "areia"],
   defaultPlanet: "terra",
   params: {
@@ -115,14 +115,14 @@ export const person: Scenario<PersonState> = {
       forces: [
         {
           kind: "action",
-          label: "AÇÃO — pé empurra o chão",
+          label: "AÇÃO - pé empurra o chão",
           origin: foot,
           dir: vec(-1, 0, 0),
           magnitude: Math.abs(s.propulsion),
         },
         {
           kind: "reaction",
-          label: "REAÇÃO — chão empurra a pessoa",
+          label: "REAÇÃO - chão empurra a pessoa",
           origin: foot,
           dir: vec(1, 0, 0),
           magnitude: Math.abs(s.propulsion),
@@ -153,7 +153,7 @@ export const person: Scenario<PersonState> = {
       metrics: [{ label: L("Velocidade", "Speed"), value: s.v, unit: "m/s", color: "#4D9FFF" }],
       note:
         env.g <= 0
-          ? L("Sem gravidade não há atrito para empurrar — sem caminhada.", "No gravity means no friction to push against — no walking.")
+          ? L("Sem gravidade não há atrito para empurrar - sem caminhada.", "No gravity means no friction to push against - no walking.")
           : s.slipping
             ? L(
                 "Escorregando: a força pedida passou do atrito estático. Só o atrito cinético empurra.",
@@ -165,9 +165,9 @@ export const person: Scenario<PersonState> = {
               ),
       source: L(
         `A pessoa empurra o chão para trás; o chão empurra a pessoa para frente com a MESMA força. ` +
-          `Essa força também vai para ${env.planetLabel} — mas a massa de ${auto(env.bodyMass, 1)} kg faz a aceleração dele ser praticamente zero.`,
+          `Essa força também vai para ${env.planetLabel} - mas a massa de ${auto(env.bodyMass, 1)} kg faz a aceleração dele ser praticamente zero.`,
         `The person pushes the ground backward; the ground pushes the person forward with the SAME force. ` +
-          `That force also goes into ${env.planetLabel} — but its mass of ${auto(env.bodyMass, 1)} kg makes its acceleration practically zero.`,
+          `That force also goes into ${env.planetLabel} - but its mass of ${auto(env.bodyMass, 1)} kg makes its acceleration practically zero.`,
       ),
       particles:
         env.g > 0 && (s.slipping || Math.abs(s.v) > 0.2)

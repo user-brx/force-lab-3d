@@ -15,7 +15,7 @@ const ISP_TEST = 280;
 
 // Todos os testes validam o núcleo contra a solução analítica de livro-texto.
 
-describe("Pessoa — 2ª e 3ª leis de Newton", () => {
+describe("Pessoa - 2ª e 3ª leis de Newton", () => {
   it("o astro recebe a mesma força, com aceleração ~ massa_pessoa/massa_astro menor", () => {
     const env = makeEnvironment("terra", "asfalto");
     const s = person.init(env, {});
@@ -42,11 +42,12 @@ describe("Pessoa — 2ª e 3ª leis de Newton", () => {
   });
 });
 
-describe("Patinadores — conservação de momento", () => {
+describe("Patinadores - conservação de momento", () => {
   it("no vácuo, momento total permanece zero e v ∝ 1/m", () => {
     const env = makeEnvironment("vacuo", "gelo");
     const params = { massaA: 60, massaB: 90, forca: 300 };
     const s = skaters.init(env, params);
+    skaters.step(s, env, params, { ...emptyControls(), fire: true }, 0.01); // dispara o empurrão
     for (let i = 0; i < 200; i++) skaters.step(s, env, params, emptyControls(), 0.01);
     const p1 = 60 * s.v1;
     const p2 = 90 * s.v2;
@@ -55,7 +56,7 @@ describe("Patinadores — conservação de momento", () => {
   });
 });
 
-describe("Carro — tração limitada por atrito", () => {
+describe("Carro - tração limitada por atrito", () => {
   it("no gelo a roda patina e a tração cai ao atrito cinético", () => {
     const env = makeEnvironment("terra", "gelo");
     const params = { massa: 1200, forca: 4500 };
@@ -66,7 +67,7 @@ describe("Carro — tração limitada por atrito", () => {
   });
 });
 
-describe("Fuzil .50 — conservação de momento e energia da pólvora", () => {
+describe("Fuzil .50 - conservação de momento e energia da pólvora", () => {
   it("no vácuo com freio de boca, |p_arma| ≈ MUZZLE_BRAKE × |p_bala| e keBala >> keArma", () => {
     const env = makeEnvironment("vacuo", "asfalto");
     // Valores reais do .50 BMG M33 Ball (Barrett M82A1): 42 g a 890 m/s, arma 14 kg
@@ -87,6 +88,31 @@ describe("Fuzil .50 — conservação de momento e energia da pólvora", () => {
     expect(keBala).toBeGreaterThan(keArma * 5);
   });
 
+  it("cada tiro adiciona uma bala sem apagar as anteriores; Matrix segue a mais recente", () => {
+    const env = makeEnvironment("vacuo", "asfalto"); // sem gravidade: as balas não caem
+    const params = { massaBala: 42, velBala: 890, massaArma: 14 };
+    const s = revolver.init(env, params);
+    const fire = () => revolver.step(s, env, params, { ...emptyControls(), fire: true }, 0.01);
+    const matrix = () => revolver.step(s, env, params, { ...emptyControls(), matrixFire: true }, 0.01);
+    const release = () => revolver.step(s, env, params, emptyControls(), 0.01);
+
+    fire();
+    expect(s.bullets.length).toBe(1);
+    release();
+    fire();
+    expect(s.bullets.length).toBe(2); // o 2º tiro NÃO apaga o 1º
+    release();
+    matrix();
+    expect(s.bullets.length).toBe(3);
+    expect(s.matrixActive).toBe(true);
+
+    // A câmera Matrix mira a última bala que saiu do cano (a mais recente).
+    const newest = s.bullets[s.bullets.length - 1];
+    const view = revolver.view(s, env, params);
+    expect(view.cameraTarget?.x).toBeCloseTo(newest.x, 6);
+    expect(view.timeScale).toBeLessThan(1);
+  });
+
   it("Cd cresce no transônico e cai no supersônico (curva real do M33)", () => {
     // O arrasto na Terra deve frear a bala mais rápido que o modelo de Cd constante.
     const env = makeEnvironment("terra", "asfalto");
@@ -95,18 +121,19 @@ describe("Fuzil .50 — conservação de momento e energia da pólvora", () => {
     revolver.step(s, env, params, { ...emptyControls(), fire: true }, 0.001);
     // Desaceleração inicial por arrasto: a ≈ ½ρv²·Cd·A / m, com Cd(Mach 2,6) ≈ 0,30.
     // Avança um passo curto e mede a perda de velocidade horizontal só por arrasto.
-    const v0 = Math.hypot(s.bulletVx, s.bulletVy);
-    const before = s.bulletVx;
+    const b0 = s.bullets[0];
+    const v0 = Math.hypot(b0.vx, b0.vy);
+    const before = b0.vx;
     revolver.step(s, env, params, emptyControls(), 0.001);
-    const decel = (before - s.bulletVx) / 0.001; // m/s²
-    // Esperado ~430–470 m/s² (vs. ~380 com o antigo Cd = 0,25).
+    const decel = (before - s.bullets[0].vx) / 0.001; // m/s²
+    // Esperado ~430-470 m/s² (vs. ~380 com o antigo Cd = 0,25).
     expect(decel).toBeGreaterThan(400);
     expect(decel).toBeLessThan(520);
     expect(v0).toBeGreaterThan(880);
   });
 });
 
-describe("Avião — precisa de ar para voar", () => {
+describe("Avião - precisa de ar para voar", () => {
   it("decola na Terra, mas não voa no vácuo (sem empuxo nem sustentação)", () => {
     const earth = makeEnvironment("terra", "asfalto");
     const space = makeEnvironment("vacuo", "asfalto");
@@ -124,7 +151,7 @@ describe("Avião — precisa de ar para voar", () => {
   });
 });
 
-describe("Foguete — fluxo de massa, TWR e equação de Tsiolkovsky", () => {
+describe("Foguete - fluxo de massa, TWR e equação de Tsiolkovsky", () => {
   it("não decola quando TWR ≤ 1", () => {
     const env = makeEnvironment("terra", "asfalto");
     const params = { empuxo: 5, massaSeca: 2000, combustivel: 100 };
@@ -182,7 +209,7 @@ describe("Gravidade em altitude usa o raio real do astro", () => {
 
 // Simulação geral: roda todos os cenários em todos os planetas, com inputs
 // variados, e garante que nada vira NaN/Infinito (caça-bugs).
-describe("Smoke — nenhuma simulação gera NaN/Infinito", () => {
+describe("Smoke - nenhuma simulação gera NaN/Infinito", () => {
   const finite = (n: number) => Number.isFinite(n);
   const okVec = (v: { x: number; y: number; z: number }) => finite(v.x) && finite(v.y) && finite(v.z);
 

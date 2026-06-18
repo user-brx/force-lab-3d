@@ -132,11 +132,11 @@ export interface Planet {
   airDensity: number;
   /** Altura de escala da atmosfera (m), para o arrasto em altitude. */
   scaleHeight: number;
-  /** Massa do astro (kg) — recebe a reação (3ª lei). */
+  /** Massa do astro (kg) - recebe a reação (3ª lei). */
   bodyMass: number;
-  /** Raio do astro (m) — para a queda da gravidade com a altitude. */
+  /** Raio do astro (m) - para a queda da gravidade com a altitude. */
   radius: number;
-  /** Velocidade do som na atmosfera (m/s) — para o número de Mach. */
+  /** Velocidade do som na atmosfera (m/s) - para o número de Mach. */
   soundSpeed: number;
   /** Cor de fundo do céu (hex). */
   skyTint: string;
@@ -204,7 +204,7 @@ export interface Params {
 
 /**
  * Contrato de um cenário. `S` é o tipo do estado mutável interno.
- * Tudo é função pura sobre o estado — fácil de testar contra a solução analítica.
+ * Tudo é função pura sobre o estado - fácil de testar contra a solução analítica.
  */
 export interface Scenario<S = unknown> {
   id: string;

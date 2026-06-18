@@ -39,7 +39,10 @@ body,
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 16px;
+  /* Respeita a barra de status / notch no PWA (viewport-fit=cover): sem isso o
+     ícone de idioma fica sob a barra do iPhone e não dá para clicar. */
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   gap: 12px;
 }
 
@@ -537,7 +540,8 @@ input[type="range"]::-moz-range-thumb {
 /* Mobile */
 @media (max-width: 760px) {
   .overlay {
-    padding: 8px;
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
     gap: 6px;
   }
 
@@ -624,7 +628,7 @@ input[type="range"]::-moz-range-thumb {
   .graph {
     height: 80px;
   }
-  /* Bottombar em rolagem horizontal — evita 2 linhas e sobreposição com o toggle */
+  /* Bottombar em rolagem horizontal - evita 2 linhas e sobreposição com o toggle */
   .bottombar {
     flex-wrap: nowrap;
     overflow-x: auto;

@@ -1,6 +1,6 @@
 import type { Vec3 } from "../physics";
 
-// O foguete sobe até ~100 km — impossível renderizar linearmente numa tela.
+// O foguete sobe até ~100 km - impossível renderizar linearmente numa tela.
 // Comprimimos a altitude em escala logarítmica acima de 120 m (a decolagem
 // permanece linear, onde a leitura importa). A física continua em metros reais.
 export function compressAltitude(y: number): number {

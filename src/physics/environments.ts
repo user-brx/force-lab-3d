@@ -2,7 +2,7 @@ import { L } from "./i18n";
 import type { Environment, Planet, Surface } from "./types";
 
 // ---------------------------------------------------------------------------
-// PLANETAS — gravidade + atmosfera + massa do astro (recebe a reação).
+// PLANETAS - gravidade + atmosfera + massa do astro (recebe a reação).
 // Valores reais: gravidade superficial (m/s²), densidade do ar na superfície
 // (kg/m³), altura de escala da atmosfera (m), massa (kg).
 // ---------------------------------------------------------------------------
@@ -34,8 +34,8 @@ export const PLANETS: Record<string, Planet> = {
     radius: 1.737e6,
     soundSpeed: 340,
     skyTint: "#05070d",
-    desc: "Gravidade fraca e sem ar — o céu é preto e estrelado.",
-    descEn: "Weak gravity and no air — the sky is black and starry.",
+    desc: "Gravidade fraca e sem ar - o céu é preto e estrelado.",
+    descEn: "Weak gravity and no air - the sky is black and starry.",
   },
   marte: {
     id: "marte",
@@ -103,7 +103,7 @@ export const PLANETS: Record<string, Planet> = {
 export const PLANET_ORDER = ["vacuo", "lua", "marte", "venus", "terra", "jupiter"];
 
 // ---------------------------------------------------------------------------
-// SUPERFÍCIES — atrito do contato (só importam quando há gravidade).
+// SUPERFÍCIES - atrito do contato (só importam quando há gravidade).
 // ---------------------------------------------------------------------------
 export const SURFACES: Record<string, Surface> = {
   asfalto: {

@@ -2,7 +2,7 @@
 import { locale } from "./i18n";
 
 export const fmt = (n: number, digits = 1): string => {
-  if (!isFinite(n)) return "—";
+  if (!isFinite(n)) return "-";
   return n.toLocaleString(locale(), {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
@@ -12,7 +12,7 @@ export const fmt = (n: number, digits = 1): string => {
 /** Notação científica curta, ex.: 1,6×10⁻²² */
 export const sci = (n: number, digits = 1): string => {
   if (n === 0) return "0";
-  if (!isFinite(n)) return "—";
+  if (!isFinite(n)) return "-";
   let exp = Math.floor(Math.log10(Math.abs(n)));
   let mant = Number((n / Math.pow(10, exp)).toFixed(digits));
   // O arredondamento pode levar a mantissa a 10 (ex.: 9,999 → 10,00): normaliza.

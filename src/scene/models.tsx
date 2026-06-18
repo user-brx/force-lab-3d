@@ -114,7 +114,7 @@ export const CarModel = forwardRef<THREE.Group, object>((_, ref) => (
       <boxGeometry args={[2.0, 0.55, 1.5]} />
       <meshStandardMaterial color="#b8362e" metalness={0.6} roughness={0.3} />
     </mesh>
-    {/* vidros — escuro reflexivo, leve */}
+    {/* vidros - escuro reflexivo, leve */}
     <mesh position={[-0.15, 1.03, 0]}>
       <boxGeometry args={[2.02, 0.4, 1.52]} />
       <meshStandardMaterial color="#0a1420" metalness={0.95} roughness={0.05} />
@@ -222,7 +222,7 @@ export const RocketModel = forwardRef<THREE.Group, object>((_, ref) => {
       decay={2}
       distance={18}
     />
-    {/* Mach diamonds (nós de choque) abaixo do bocal — só na atmosfera */}
+    {/* Mach diamonds (nós de choque) abaixo do bocal - só na atmosfera */}
     <group ref={diamonds} position={[0, -4.3, 0]} visible={false}>
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <mesh key={i} position={[0, -i * 0.7, 0]}>
@@ -261,7 +261,7 @@ export const RevolverModel = forwardRef<THREE.Group, object>((_, ref) => (
       <boxGeometry args={[0.70, 0.17, 0.16]} />
       <meshStandardMaterial color="#1e2430" metalness={0.75} roughness={0.4} />
     </mesh>
-    {/* Cano longo do .50 BMG (≈ 73 cm) — tip at x ≈ 1.05 */}
+    {/* Cano longo do .50 BMG (≈ 73 cm) - tip at x ≈ 1.05 */}
     <mesh position={[0.70, 0.15, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
       <cylinderGeometry args={[0.022, 0.022, 0.70, 16]} />
       <meshStandardMaterial color="#aab2c4" metalness={0.92} roughness={0.22} />
@@ -290,12 +290,12 @@ export const RevolverModel = forwardRef<THREE.Group, object>((_, ref) => (
         <meshStandardMaterial color="#1a1e26" metalness={0.7} roughness={0.4} />
       </mesh>
     ))}
-    {/* Bipé — perna esquerda */}
+    {/* Bipé - perna esquerda */}
     <mesh position={[0.50, -0.06, 0.16]} rotation={[0.28, 0, 0.08]} castShadow>
       <boxGeometry args={[0.022, 0.38, 0.022]} />
       <meshStandardMaterial color="#2a2e38" metalness={0.6} roughness={0.5} />
     </mesh>
-    {/* Bipé — perna direita */}
+    {/* Bipé - perna direita */}
     <mesh position={[0.50, -0.06, -0.16]} rotation={[-0.28, 0, 0.08]} castShadow>
       <boxGeometry args={[0.022, 0.38, 0.022]} />
       <meshStandardMaterial color="#2a2e38" metalness={0.6} roughness={0.5} />

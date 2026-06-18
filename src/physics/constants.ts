@@ -1,5 +1,5 @@
 // Constantes físicas reais (SI). Valores de referência CODATA / padrão.
-// Nenhum número aqui é "chutado" — todos têm fonte física.
+// Nenhum número aqui é "chutado" - todos têm fonte física.
 
 /** Gravidade padrão na superfície da Terra (m/s²). */
 export const G0 = 9.80665;
@@ -19,7 +19,7 @@ export const AIR_DENSITY_SL = 1.225;
 /** Altura de escala da atmosfera para o modelo isotérmico (m). rho(h)=rho0·e^(-h/H). */
 export const ATMOS_SCALE_HEIGHT = 8500;
 
-/** Linha de Kármán — fronteira convencional do espaço (m). */
+/** Linha de Kármán - fronteira convencional do espaço (m). */
 export const KARMAN_LINE = 100_000;
 
 /** Velocidade do som ao nível do mar, ar a 15 °C (m/s). */

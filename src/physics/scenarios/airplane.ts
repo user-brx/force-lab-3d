@@ -149,7 +149,7 @@ export const airplane: Scenario<PlaneState> = {
     s.events = [];
 
     // Fluxo de ar sobre a asa: quantidade ∝ densidade do ar × velocidade.
-    // O ar é defletido para BAIXO (downwash) — é a reação que sustenta o avião.
+    // O ar é defletido para BAIXO (downwash) - é a reação que sustenta o avião.
     const airFlow = Math.min(1, (rho / AIR_DENSITY_SL) * (s.v / 28));
     const dwCount = Math.round(airFlow * 4);
     const airParticles =
@@ -177,9 +177,9 @@ export const airplane: Scenario<PlaneState> = {
         : [];
 
     const forces = [
-      { kind: "action" as const, label: "EMPUXO — motor joga ar para trás", origin: body, dir: vec(cs, sn, 0), magnitude: s.T },
+      { kind: "action" as const, label: "EMPUXO - motor joga ar para trás", origin: body, dir: vec(cs, sn, 0), magnitude: s.T },
       { kind: "drag" as const, label: "ARRASTO do ar", origin: body, dir: vec(-cs, -sn, 0), magnitude: s.D },
-      { kind: "lift" as const, label: "SUSTENTAÇÃO — asas jogam ar para baixo", origin: body, dir: vec(-sn, cs, 0), magnitude: s.lift },
+      { kind: "lift" as const, label: "SUSTENTAÇÃO - asas jogam ar para baixo", origin: body, dir: vec(-sn, cs, 0), magnitude: s.lift },
       { kind: "weight" as const, label: "PESO", origin: body, dir: vec(0, -1, 0), magnitude: W },
     ];
 
@@ -220,9 +220,9 @@ export const airplane: Scenario<PlaneState> = {
       note,
       source: L(
         "A hélice/turbina joga AR para trás e o ar empurra o avião para frente (3ª lei). As asas defletem o ar para baixo e o ar empurra as asas para cima (sustentação). " +
-          "Tudo depende do ar — por isso o avião não voa no vácuo, enquanto o foguete (que carrega sua própria massa de reação) voa.",
+          "Tudo depende do ar - por isso o avião não voa no vácuo, enquanto o foguete (que carrega sua própria massa de reação) voa.",
         "The propeller/turbine throws AIR backward and the air pushes the plane forward (3rd law). The wings deflect air downward and the air pushes the wings up (lift). " +
-          "It all depends on the air — that's why an airplane can't fly in vacuum, while a rocket (which carries its own reaction mass) can.",
+          "It all depends on the air - that's why an airplane can't fly in vacuum, while a rocket (which carries its own reaction mass) can.",
       ),
       particles: [
         ...airParticles,

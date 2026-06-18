@@ -126,7 +126,6 @@ export function SidePanel() {
   const sc = SCENARIOS[scenarioId];
   const hasGravity = PLANETS[planetId].g > 0;
   const showSurfaces = sc.surfaces.length > 0 && hasGravity;
-  const jet = (params?.jato ?? 0) >= 0.5;
 
   return (
     <div className="left-col">
@@ -171,18 +170,6 @@ export function SidePanel() {
               />
             </div>
           ))}
-
-        {scenarioId === "aviao" && (
-          <div className="btn-row" style={{ marginTop: 10 }}>
-            <button className={`btn ${!jet ? "on" : ""}`} onClick={() => setParam("jato", 0)}>
-              ✈️ {L("Hélice", "Propeller")}
-            </button>
-            <button className={`btn ${jet ? "on" : ""}`} onClick={() => setParam("jato", 1)}>
-              🛩️ {L("Jato", "Jet")}
-            </button>
-          </div>
-        )}
-
       </div>
     </div>
   );
@@ -192,30 +179,13 @@ export function ActionBar() {
   const scenarioId = useStore((s) => s.scenarioId);
   const hold = useStore((s) => s.hold);
   const toggleHold = useStore((s) => s.toggleHold);
-  const planetId = useStore((s) => s.planetId);
-  const surfaceId = useStore((s) => s.surfaceId);
-  const setSurface = useStore((s) => s.setSurface);
+  const params = useStore((s) => s.params[s.scenarioId]);
+  const setParam = useStore((s) => s.setParam);
   useStore((s) => s.lang);
-
-  const hasGravity = PLANETS[planetId].g > 0;
-  const sc = SCENARIOS[scenarioId];
 
   if (scenarioId === "revolver") {
     return (
       <div className="actionbar">
-        {hasGravity && sc.surfaces.length > 0 && (
-          <div>
-            {sc.surfaces.map((id) => (
-              <button
-                key={id}
-                className={`btn ${surfaceId === id ? "on" : ""}`}
-                onClick={() => setSurface(id)}
-              >
-                {surfaceLabel(SURFACES[id])}
-              </button>
-            ))}
-          </div>
-        )}
         <div>
           <button className="btn fire" onClick={() => (runtime.input.fire = true)}>
             🎯 {L("Disparar", "Fire")}
@@ -225,6 +195,22 @@ export function ActionBar() {
           </button>
           <button className="btn fire" onClick={() => (runtime.input.matrixFire = true)}>
             ⏱️ {L("Matrix", "Matrix")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (scenarioId === "aviao") {
+    const jet = (params?.jato ?? 0) >= 0.5;
+    return (
+      <div className="actionbar">
+        <div>
+          <button className={`btn ${!jet ? "on" : ""}`} onClick={() => setParam("jato", 0)}>
+            ✈️ {L("Hélice", "Propeller")}
+          </button>
+          <button className={`btn ${jet ? "on" : ""}`} onClick={() => setParam("jato", 1)}>
+            🛩️ {L("Jato", "Jet")}
           </button>
         </div>
       </div>
@@ -247,7 +233,7 @@ export function ActionBar() {
       <div className="actionbar">
         <div>
           <button className="btn fire" onClick={() => (runtime.input.fire = true)}>
-            👐 {L("Empurrar / Reiniciar", "Push / Reset")}
+            👐 {L("Empurrar", "Push")}
           </button>
         </div>
       </div>

@@ -62,7 +62,7 @@ export function Engine() {
 
     let dt = Math.min(delta, 0.05);
     if (st.slowmo) dt *= 0.25;
-    // Escala de tempo pedida pelo cenário (ex.: bullet time do revólver) — vem
+    // Escala de tempo pedida pelo cenário (ex.: bullet time do revólver) - vem
     // do snapshot do frame anterior. Só desacelera DEPOIS que a bala existe, então
     // não "fome" o pulso de disparo no frame em que o tiro acontece.
     dt *= runtime.view?.timeScale ?? 1;
@@ -70,7 +70,7 @@ export function Engine() {
 
     // Passo semi-fixo: avança a física por EXATAMENTE dt a cada frame, em
     // sub-passos de no máximo STEP. Em câmera lenta (dt < STEP) isso dá 1
-    // sub-passo pequeno por frame — a bala se move um pouco SEMPRE, sem pulos.
+    // sub-passo pequeno por frame - a bala se move um pouco SEMPRE, sem pulos.
     acc.current += dt;
     let steps = 0;
     while (acc.current > 1e-6 && steps < MAX_SUBSTEPS) {
@@ -79,7 +79,7 @@ export function Engine() {
       acc.current -= h;
       steps++;
     }
-    // Só consome os pulsos quando um passo realmente rodou — assim um disparo
+    // Só consome os pulsos quando um passo realmente rodou - assim um disparo
     // nunca é perdido se o frame não avançou física (pausa/câmera lenta extrema).
     if (steps > 0) {
       runtime.input.fire = false;

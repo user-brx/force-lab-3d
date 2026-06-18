@@ -7,9 +7,20 @@ import type { Scenario, SceneView, ShockEmit, ForceArrow, Readout, Metric, Scene
 // O gás da pólvora empurra a projétil para frente E o fundo do cano para trás,
 // com a MESMA força. Projétil e arma ganham momentos iguais e opostos (soma = 0).
 // O freio de boca (muzzle brake) desvia ~60 % dos gases para os lados,
-// reduzindo o recuo transmitido ao carrinho — mas NÃO viola a 3ª lei:
+// reduzindo o recuo transmitido ao carrinho - mas NÃO viola a 3ª lei:
 // o impulso total (projétil + gases + arma) ainda soma zero.
 // O cano fica acima do centro de massa: o recuo gera torque (cano sobe / gira).
+
+// Cada projétil em voo é independente: dá para atirar várias vezes e ver todas
+// as balas viajando ao mesmo tempo, uma atrás da outra, até sumirem.
+interface Bullet {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  dist: number;   // distância percorrida (m)
+  shockT: number; // acumulador para emitir ondas de choque
+}
 
 interface RevolverState {
   gunX: number;
@@ -18,33 +29,28 @@ interface RevolverState {
   gunVy: number;
   gunAngle: number; // rad (cano sobe = positivo)
   gunOmega: number; // rad/s
-  bulletX: number;
-  bulletY: number;
-  bulletVx: number;
-  bulletVy: number;
-  bulletLive: boolean;
-  matrixFollow: boolean;
+  bullets: Bullet[];
+  matrixActive: boolean; // câmera lenta seguindo a última bala que saiu do cano
   firedMomentum: number;
   tSinceFire: number;
   prevFire: boolean;
   events: ShockEmit[];
-  bulletDist: number;
-  bulletShockT: number;
 }
 
-// .50 BMG / Barrett M82A1 com projétil M33 Ball (661 gr ≈ 42 g a 890 m/s) — valores reais
+// .50 BMG / Barrett M82A1 com projétil M33 Ball (661 gr ≈ 42 g a 890 m/s) - valores reais
 const BARREL_ABOVE_COM = 0.10;  // m (cano acima do CdM do conjunto bipé+arma)
 const I_GUN_FACTOR    = 0.15;  // m² (momento de inércia / massa: fuzil longo e pesado)
 const MUZZLE_BRAKE    = 0.38;  // fração do recuo transmitida ao carrinho (~62 % absorvido pelo freio)
 const SHOT_WINDOW     = 0.05;  // s (janela para força média)
 const MATRIX_RANGE    = 1000;  // m (segue a bala até 1 km em câmera lenta)
+const MAX_BULLETS     = 16;    // teto de balas simultâneas (= pool de modelos na cena)
 // Projétil .50 BMG: diâmetro 12,95 mm → área frontal = π·(0,006475)² ≈ 1,317×10⁻⁴ m²
 const BULLET_AREA     = 1.317e-4; // m²
 
 // Coeficiente de arrasto do projétil .50 BMG em função do número de Mach.
 // Curva derivada de dados balísticos do M33 Ball: subsônico baixo (~0,14), pico
 // transônico agudo (~0,43 perto de Mach 1) e queda lenta no supersônico (~0,29).
-// Interpolação linear por trechos — é assim que Cd realmente varia com a velocidade.
+// Interpolação linear por trechos - é assim que Cd realmente varia com a velocidade.
 const CD_MACH = [0.0, 0.70, 0.85, 0.95, 1.05, 1.20, 1.50, 2.00, 2.50, 3.00, 4.00];
 const CD_VAL  = [0.14, 0.14, 0.16, 0.30, 0.43, 0.42, 0.37, 0.32, 0.30, 0.29, 0.28];
 function bulletCd(mach: number): number {
@@ -76,16 +82,12 @@ export const revolver: Scenario<RevolverState> = {
     gunX: 0, gunY: 0,
     gunVx: 0, gunVy: 0,
     gunAngle: 0, gunOmega: 0,
-    bulletX: 0, bulletY: 0,
-    bulletVx: 0, bulletVy: 0,
-    bulletLive: false,
-    matrixFollow: false,
+    bullets: [],
+    matrixActive: false,
     firedMomentum: 0,
     tSinceFire: 999,
     prevFire: false,
     events: [],
-    bulletDist: 0,
-    bulletShockT: 0,
   }),
 
   step(s, env, params, c, dt) {
@@ -95,7 +97,7 @@ export const revolver: Scenario<RevolverState> = {
     const space = env.g <= 0;
     s.tSinceFire += dt;
 
-    // Disparo: gatilho de subida (rising-edge) — nunca re-dispara no mesmo substep.
+    // Disparo: gatilho de subida (rising-edge) - nunca re-dispara no mesmo substep.
     if ((c.fire || c.matrixFire) && !s.prevFire) {
       const p = mB * vB; // módulo do momento do projétil (kg·m/s)
       s.firedMomentum = p;
@@ -103,16 +105,12 @@ export const revolver: Scenario<RevolverState> = {
       const dy = Math.sin(s.gunAngle);
       const muzzle = muzzlePos(s);
 
-      // Posição e velocidade iniciais do projétil.
-      s.bulletX = muzzle.x;
-      s.bulletY = muzzle.y;
-      s.bulletVx = vB * dx;
-      s.bulletVy = vB * dy;
-      s.bulletLive = true;
-      s.matrixFollow = !!c.matrixFire;
+      // Nova bala (não apaga as anteriores): entra no fim da lista. A mais recente
+      // é sempre a última do array e é a que a câmera Matrix segue.
+      s.bullets.push({ x: muzzle.x, y: muzzle.y, vx: vB * dx, vy: vB * dy, dist: 0, shockT: 0 });
+      if (s.bullets.length > MAX_BULLETS) s.bullets.shift(); // descarta a mais antiga
+      if (c.matrixFire) s.matrixActive = true;
       s.tSinceFire = 0;
-      s.bulletDist = 0;     // ← zera para a régua do Matrix funcionar no 2º tiro
-      s.bulletShockT = 0;
 
       // Efeitos visuais.
       s.events.push({ at: muzzle, kind: "blast", color: "#ff6b2b", maxRadius: 3.2, life: 0.5 });
@@ -121,7 +119,7 @@ export const revolver: Scenario<RevolverState> = {
         s.events.push({ at: vec(s.gunX, 0.05, 0), kind: "ring", color: "#9fc3ff", maxRadius: 3.5, life: 0.7 });
       }
 
-      // Recuo: o freio de boca absorve ~62 % — o carrinho recebe apenas MUZZLE_BRAKE·p.
+      // Recuo: o freio de boca absorve ~62 % - o carrinho recebe apenas MUZZLE_BRAKE·p.
       const recoil = (p * MUZZLE_BRAKE) / mG;
       if (c.hold) {
         s.gunVx  += -recoil * dx * 0.06;
@@ -155,42 +153,47 @@ export const revolver: Scenario<RevolverState> = {
     }
     s.gunAngle += s.gunOmega * dt;
 
-    // --- Projétil .50 BMG ---
-    if (s.bulletLive) {
-      const speed = Math.hypot(s.bulletVx, s.bulletVy);
+    // --- Projéteis .50 BMG (cada bala é independente) ---
+    for (const b of s.bullets) {
+      const speed = Math.hypot(b.vx, b.vy);
 
       // Arrasto do ar: F = ½·ρ·v²·Cd·A. Cd varia com Mach (curva real do M33).
       if (env.airDensity > 0 && speed > 0) {
         const cd = bulletCd(speed / env.soundSpeed);
         const dragAcc = (0.5 * env.airDensity * speed * speed * cd * BULLET_AREA) / mB;
-        s.bulletVx -= dragAcc * (s.bulletVx / speed) * dt;
-        s.bulletVy -= dragAcc * (s.bulletVy / speed) * dt;
+        b.vx -= dragAcc * (b.vx / speed) * dt;
+        b.vy -= dragAcc * (b.vy / speed) * dt;
       }
 
-      if (env.g > 0) s.bulletVy -= env.g * dt;
-      s.bulletX += s.bulletVx * dt;
-      s.bulletY += s.bulletVy * dt;
-      s.bulletDist += speed * dt;
+      if (env.g > 0) b.vy -= env.g * dt;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.dist += speed * dt;
 
       // Ondas de choque supersônicas.
       const mach = speed / env.soundSpeed;
       if (mach > 1 && env.airDensity > 0) {
-        s.bulletShockT += dt;
-        if (s.bulletShockT >= 0.04) {
-          s.bulletShockT = 0;
-          s.events.push({ at: vec(s.bulletX, s.bulletY, 0), kind: "blast", color: "#bfe0ff", maxRadius: 1.4, life: 0.4 });
+        b.shockT += dt;
+        if (b.shockT >= 0.04) {
+          b.shockT = 0;
+          s.events.push({ at: vec(b.x, b.y, 0), kind: "blast", color: "#bfe0ff", maxRadius: 1.4, life: 0.4 });
         }
       } else {
-        s.bulletShockT = 0;
+        b.shockT = 0;
       }
-
-      const far = Math.hypot(s.bulletX - s.gunX, s.bulletY - s.gunY) > 50000;
-      if (far || (env.g > 0 && s.bulletY < 0)) s.bulletLive = false;
     }
 
-    // Encerra o bullet-time após MATRIX_RANGE metros.
-    if (s.matrixFollow && (!s.bulletLive || s.bulletDist > MATRIX_RANGE)) {
-      s.matrixFollow = false;
+    // Remove as balas que sumiram (caíram no chão ou saíram bem longe).
+    s.bullets = s.bullets.filter((b) => {
+      const far = Math.hypot(b.x - s.gunX, b.y - s.gunY) > 50000;
+      return !(far || (env.g > 0 && b.y < 0));
+    });
+
+    // Matrix segue a última bala que saiu do cano (a mais recente da lista).
+    // Encerra quando não há mais bala viva ou quando ela passa de MATRIX_RANGE.
+    if (s.matrixActive) {
+      const newest = s.bullets[s.bullets.length - 1];
+      if (!newest || newest.dist > MATRIX_RANGE) s.matrixActive = false;
     }
   },
 
@@ -216,48 +219,59 @@ export const revolver: Scenario<RevolverState> = {
 
     const comY = 0.40 + s.gunY;
     const bodies: SceneView["bodies"] = [{ id: "gun", position: vec(s.gunX, comY, 0), rotation: s.gunAngle }];
-    if (s.bulletLive) bodies.push({ id: "bullet", position: vec(s.bulletX, s.bulletY, 0), rotation: Math.atan2(s.bulletVy, s.bulletVx) });
+    s.bullets.forEach((b, i) => {
+      bodies.push({ id: `bullet${i}`, position: vec(b.x, b.y, 0), rotation: Math.atan2(b.vy, b.vx) });
+    });
+    const newest = s.bullets[s.bullets.length - 1]; // bala mais recente (a que a Matrix segue)
+    const hasBullets = s.bullets.length > 0;
 
     const forces: ForceArrow[] = [];
     if (showShot) {
-      forces.push({ kind: "action",   label: L("AÇÃO — gás empurra o projétil", "ACTION — gas pushes bullet"),   origin: muzzle, dir: vec(dx, dy, 0), magnitude: avgForce });
-      forces.push({ kind: "reaction", label: L("REAÇÃO — gás empurra a arma",  "REACTION — gas pushes rifle"), origin: vec(s.gunX - 0.4 * dx, comY + 0.12, 0), dir: vec(-dx, -dy, 0), magnitude: avgForce });
+      forces.push({ kind: "action",   label: L("AÇÃO - gás empurra o projétil", "ACTION - gas pushes bullet"),   origin: muzzle, dir: vec(dx, dy, 0), magnitude: avgForce });
+      forces.push({ kind: "reaction", label: L("REAÇÃO - gás empurra a arma",  "REACTION - gas pushes rifle"), origin: vec(s.gunX - 0.4 * dx, comY + 0.12, 0), dir: vec(-dx, -dy, 0), magnitude: avgForce });
     }
 
     const readouts: Readout[] = [];
     const metrics: Metric[]   = [];
     const labels: SceneLabel[] = [];
 
-    if (s.bulletLive) {
-      const bSpeed = Math.hypot(s.bulletVx, s.bulletVy);
+    if (hasBullets) {
+      const bSpeed = Math.hypot(newest.vx, newest.vy);
       const bMach  = env.soundSpeed > 0 ? bSpeed / env.soundSpeed : 0;
       const bDrag  = env.airDensity > 0 ? 0.5 * env.airDensity * bSpeed * bSpeed * bulletCd(bMach) * BULLET_AREA : 0;
       const bWeight = mB * env.g;
 
-      if (env.g > 0)    forces.push({ kind: "weight", label: "PESO",    origin: vec(s.bulletX, s.bulletY, 0), dir: vec(0, -1, 0),                               magnitude: bWeight });
-      if (bDrag > 0 && bSpeed > 1e-6) forces.push({ kind: "drag", label: "ARRASTO", origin: vec(s.bulletX, s.bulletY, 0), dir: vec(-s.bulletVx / bSpeed, -s.bulletVy / bSpeed, 0), magnitude: bDrag });
+      if (env.g > 0)    forces.push({ kind: "weight", label: "PESO",    origin: vec(newest.x, newest.y, 0), dir: vec(0, -1, 0),                               magnitude: bWeight });
+      if (bDrag > 0 && bSpeed > 1e-6) forces.push({ kind: "drag", label: "ARRASTO", origin: vec(newest.x, newest.y, 0), dir: vec(-newest.vx / bSpeed, -newest.vy / bSpeed, 0), magnitude: bDrag });
 
       readouts.push(
         { label: L("Velocidade do projétil", "Bullet speed"),      value: fmt(bSpeed, 1),        unit: "m/s", highlight: true },
-        { label: L("Distância percorrida",   "Distance traveled"), value: fmt(s.bulletDist, 1),  unit: "m"   },
-        { label: L("Altitude do projétil",   "Bullet altitude"),   value: fmt(s.bulletY, 2),     unit: "m"   },
+        { label: L("Distância percorrida",   "Distance traveled"), value: fmt(newest.dist, 1),   unit: "m"   },
+        { label: L("Altitude do projétil",   "Bullet altitude"),   value: fmt(newest.y, 2),      unit: "m"   },
         { label: L("Mach",                   "Mach"),              value: fmt(bMach, 2), unit: "" },
       );
+      if (s.bullets.length > 1) readouts.push({ label: L("Balas no ar", "Bullets in flight"), value: fmt(s.bullets.length, 0), unit: "" });
       if (env.airDensity > 0) readouts.push({ label: L("Arrasto do ar", "Air drag"), value: fmt(bDrag, 2), unit: "N" });
-      if (env.g > 0)          readouts.push({ label: L("Queda balística", "Ballistic drop"), value: fmt(muzzle.y - s.bulletY, 2), unit: "m" });
+      if (env.g > 0)          readouts.push({ label: L("Queda balística", "Ballistic drop"), value: fmt(muzzle.y - newest.y, 2), unit: "m" });
 
       metrics.push(
-        { label: L("Velocidade", "Speed"),    value: bSpeed,        unit: "m/s", color: "#e7c96a" },
-        { label: L("Distância",  "Distance"), value: s.bulletDist,  unit: "m",   color: "#4d9fff" },
+        { label: L("Velocidade", "Speed"),    value: bSpeed,       unit: "m/s", color: "#e7c96a" },
+        { label: L("Distância",  "Distance"), value: newest.dist,  unit: "m",   color: "#4d9fff" },
       );
 
-      // Rótulo flutuante sobre a bala: velocidade + distância (legível no Matrix).
-      labels.push({
-        at: vec(s.bulletX, s.bulletY, 0),
-        title: `${fmt(bSpeed, 0)} m/s`,
-        subtitle: `${fmt(s.bulletDist, 0)} m · Mach ${fmt(bMach, 1)}`,
-        color: "#e7c96a",
-      });
+      // Rótulo flutuante sobre cada bala viva: velocidade + distância (legível no
+      // Matrix). Da mais recente para a mais antiga, para a bala atual ter prioridade
+      // quando há mais balas que slots de rótulo na cena.
+      for (let i = s.bullets.length - 1; i >= 0; i--) {
+        const b = s.bullets[i];
+        const sp = Math.hypot(b.vx, b.vy);
+        labels.push({
+          at: vec(b.x, b.y, 0),
+          title: `${fmt(sp, 0)} m/s`,
+          subtitle: `${fmt(b.dist, 0)} m · Mach ${fmt(env.soundSpeed > 0 ? sp / env.soundSpeed : 0, 1)}`,
+          color: "#e7c96a",
+        });
+      }
     } else {
       readouts.push(
         { label: L("Momento do projétil",      "Bullet momentum"),     value: fmt(pBullet, 2),          unit: "kg·m/s" },
@@ -281,21 +295,21 @@ export const revolver: Scenario<RevolverState> = {
         ? L("Pressione DISPARAR para atirar. Matrix ativa câmera lenta.", "Press FIRE to shoot. Matrix enables slow-motion follow.")
         : env.g <= 0
           ? L(
-              "Vácuo: a arma recua E gira. Atire de novo — cada tiro sai pelo cano inclinado.",
-              "Vacuum: the rifle recoils AND spins. Fire again — each shot leaves along the tilted barrel.",
+              "Vácuo: a arma recua E gira. Atire de novo - cada tiro sai pelo cano inclinado.",
+              "Vacuum: the rifle recoils AND spins. Fire again - each shot leaves along the tilted barrel.",
             )
           : L(
               "O freio de boca absorve ~62 % do recuo. Ative SEGURAR para o bipé absorver ainda mais.",
               "The muzzle brake absorbs ~62 % of recoil. Enable HOLD so the bipod absorbs even more.",
             ),
       source: L(
-        "O .50 BMG M33 (12,7×99 mm NATO) lança um projétil de 42 g a 890 m/s — energia cinética de ~17 kJ, " +
+        "O .50 BMG M33 (12,7×99 mm NATO) lança um projétil de 42 g a 890 m/s - energia cinética de ~17 kJ, " +
         "Mach 2,6 na Terra. O freio de boca deflecte os gases para os lados, reduzindo o impulso transmitido " +
         "à arma (~62 %); a conservação do momento total (projétil + gases + arma) ainda é exata: p_total = 0. " +
         "O arrasto (Cd varia com Mach: pico transônico ~0,43, supersônico ~0,30) freia a bala a ~450 m/s²; o " +
         "tiro horizontal de ~0,5 m de altura toca o solo a algumas centenas de metros (queda = ½·g·t²). " +
         "Em elevação ótima (~30°) o alcance máximo chega a ~6,8 km.",
-        "The .50 BMG M33 (12.7×99 mm NATO) launches a 42 g projectile at 890 m/s — kinetic energy ~17 kJ, " +
+        "The .50 BMG M33 (12.7×99 mm NATO) launches a 42 g projectile at 890 m/s - kinetic energy ~17 kJ, " +
         "Mach 2.6 on Earth. The muzzle brake deflects gases sideways, cutting the impulse transferred to the " +
         "rifle (~62 %); total momentum conservation still holds exactly: p_total = 0. " +
         "Drag (Cd varies with Mach: transonic peak ~0.43, supersonic ~0.30) slows the bullet at ~450 m/s²; a " +
@@ -309,13 +323,13 @@ export const revolver: Scenario<RevolverState> = {
           ]
         : [],
       shocks,
-      cameraTarget: (s.bulletLive && s.matrixFollow) ? vec(s.bulletX, s.bulletY, 0) : vec(s.gunX, 0.7 + s.gunY, 0),
-      timeScale: s.bulletLive && s.matrixFollow ? 0.08 : 1, // câmera ainda mais lenta para .50 BMG
+      cameraTarget: (s.matrixActive && newest) ? vec(newest.x, newest.y, 0) : vec(s.gunX, 0.7 + s.gunY, 0),
+      timeScale: (s.matrixActive && newest) ? 0.08 : 1, // câmera lenta seguindo a última bala que saiu
     };
   },
 };
 
-// Posição da boca do cano (cano comprido do .50 BMG — ~73 cm de cano).
+// Posição da boca do cano (cano comprido do .50 BMG - ~73 cm de cano).
 function muzzlePos(s: RevolverState) {
   const pivotY = 0.40 + s.gunY;
   const dx = 1.05; // boca à frente do CdM (cano mais longo que o revólver)

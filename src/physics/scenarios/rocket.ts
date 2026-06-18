@@ -5,7 +5,7 @@ import { clamp, vec } from "../math";
 import type { Scenario, SceneView, ShockEmit } from "../types";
 
 // Foguete. O empuxo nasce DENTRO do motor: o gás é expelido por um sentido e
-// o foguete vai no sentido oposto, com a mesma força (3ª lei) — o mesmo
+// o foguete vai no sentido oposto, com a mesma força (3ª lei) - o mesmo
 // fenômeno do revólver. Não precisa de ar para empurrar; funciona melhor no vácuo.
 //
 // Modelagem 2D no plano vertical: x horizontal, y = altitude, φ = inclinação.
@@ -28,7 +28,7 @@ interface RocketState {
 }
 
 const ISP = 280; // impulso específico (s), típico de querosene/LOX
-const LENGTH = 8; // comprimento do foguete (m) — usado para inércia/braço
+const LENGTH = 8; // comprimento do foguete (m) - usado para inércia/braço
 const DRAG_CD = 0.5;
 const DRAG_AREA = 1.0; // m²
 const GIMBAL_MAX = (5 * Math.PI) / 180; // 5°
@@ -195,7 +195,7 @@ export const rocket: Scenario<RocketState> = {
       });
       forces.push({
         kind: "action" as const,
-        label: "AÇÃO — foguete expele o gás",
+        label: "AÇÃO - foguete expele o gás",
         origin: base,
         dir: nozzleDir,
         magnitude: thrust,
@@ -284,9 +284,9 @@ export const rocket: Scenario<RocketState> = {
       note,
       source: L(
         "O empuxo acontece DENTRO do motor, no instante em que o gás é expelido. O gás é jogado para um lado e o foguete " +
-          "vai para o outro com a mesma força — exatamente como o revólver. Por isso funciona (melhor!) no vácuo.",
+          "vai para o outro com a mesma força - exatamente como o revólver. Por isso funciona (melhor!) no vácuo.",
         "Thrust happens INSIDE the engine, the moment the gas is expelled. The gas is thrown one way and the rocket " +
-          "goes the other with the same force — exactly like the revolver. That's why it works (better!) in vacuum.",
+          "goes the other with the same force - exactly like the revolver. That's why it works (better!) in vacuum.",
       ),
       particles: firing
         ? [

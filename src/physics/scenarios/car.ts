@@ -103,14 +103,14 @@ export const car: Scenario<CarState> = {
       forces: [
         {
           kind: "action",
-          label: "AÇÃO — pneu empurra o chão",
+          label: "AÇÃO - pneu empurra o chão",
           origin: wheel,
           dir: vec(-1, 0, 0),
           magnitude: s.fTraction,
         },
         {
           kind: "reaction",
-          label: "REAÇÃO — chão empurra o carro",
+          label: "REAÇÃO - chão empurra o carro",
           origin: wheel,
           dir: vec(1, 0, 0),
           magnitude: s.fTraction,
@@ -140,16 +140,16 @@ export const car: Scenario<CarState> = {
           ? L("Sem gravidade não há atrito: a roda gira sem empurrar nada.", "No gravity, no friction: the wheel spins without pushing anything.")
           : s.spinning
             ? L(
-                "Patinando! A força do motor passou do atrito disponível — a roda gira sem empurrar.",
-                "Wheelspin! The engine force exceeded the available friction — the wheel spins without pushing.",
+                "Patinando! A força do motor passou do atrito disponível - a roda gira sem empurrar.",
+                "Wheelspin! The engine force exceeded the available friction - the wheel spins without pushing.",
               )
             : s.fDrag >= s.fTraction - 1 && s.v > 1
               ? L("Velocidade máxima: o arrasto igualou a tração.", "Top speed: drag has matched traction.")
               : L("Acelerando: a tração vence o arrasto.", "Accelerating: traction beats drag."),
       source: L(
-        "O motor não empurra o carro diretamente — ele gira a roda, que empurra o chão para trás. " +
+        "O motor não empurra o carro diretamente - ele gira a roda, que empurra o chão para trás. " +
           "O chão responde empurrando o carro para frente. Sem atrito (gelo), a roda patina e quase não há reação.",
-        "The engine doesn't push the car directly — it spins the wheel, which pushes the ground backward. " +
+        "The engine doesn't push the car directly - it spins the wheel, which pushes the ground backward. " +
           "The ground responds by pushing the car forward. Without friction (ice), the wheel spins and there's almost no reaction.",
       ),
       particles: s.spinning

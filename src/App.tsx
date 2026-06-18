@@ -67,7 +67,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Recolher/mostrar painéis — visível só no mobile (CSS) */}
+      {/* Recolher/mostrar painéis - visível só no mobile (CSS) */}
       <button
         className="panel-toggle"
         onClick={togglePanels}
