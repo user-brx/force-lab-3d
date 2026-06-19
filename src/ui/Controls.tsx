@@ -1,4 +1,5 @@
 import {
+  BARRIER_MATERIALS,
   L,
   PLANETS,
   PLANET_ORDER,
@@ -127,6 +128,9 @@ export function SidePanel() {
   const hasGravity = PLANETS[planetId].g > 0;
   const showSurfaces = sc.surfaces.length > 0 && hasGravity;
 
+  // Params da barreira do rifle têm UI própria (não entram nos sliders genéricos).
+  const BARRIER_KEYS = ["jato", "barreira", "material", "espessura", "distancia"];
+
   return (
     <div className="left-col">
       <PlanetPicker />
@@ -151,7 +155,7 @@ export function SidePanel() {
       <div className="panel">
         <h2>{L("Ajustes", "Settings")}</h2>
         {Object.entries(sc.params)
-          .filter(([key]) => key !== "jato")
+          .filter(([key]) => !BARRIER_KEYS.includes(key))
           .map(([key, def]) => (
             <div className="slider" key={key}>
               <div className="row">
@@ -171,6 +175,67 @@ export function SidePanel() {
             </div>
           ))}
       </div>
+
+      {scenarioId === "revolver" && <BarrierPanel params={params} setParam={setParam} />}
+    </div>
+  );
+}
+
+/** Painel da barreira-alvo do Fuzil .50: liga/desliga, material, espessura, distância. */
+function BarrierPanel({
+  params,
+  setParam,
+}: {
+  params?: Record<string, number>;
+  setParam: (key: string, value: number) => void;
+}) {
+  useStore((s) => s.lang);
+  const on = (params?.barreira ?? 1) >= 0.5;
+  const matIdx = Math.round(params?.material ?? 0);
+  const esp = params?.espessura ?? 10;
+  const dist = params?.distancia ?? 25;
+
+  return (
+    <div className="panel">
+      <h2>{L("Barreira-alvo", "Target barrier")}</h2>
+
+      {!on && (
+        <div className="planet-desc">
+          {L("Ligue a barreira no botão 🧱 da barra de ações.", "Turn the barrier on with the 🧱 button in the action bar.")}
+        </div>
+      )}
+
+      {on && (
+        <>
+          <div className="btn-row" style={{ flexDirection: "column", alignItems: "stretch" }}>
+            {BARRIER_MATERIALS.map((m, i) => (
+              <button
+                key={m.id}
+                className={`btn ${matIdx === i ? "on" : ""}`}
+                style={{ flex: "0 0 auto" }}
+                onClick={() => setParam("material", i)}
+              >
+                {L(m.label, m.labelEn)}
+              </button>
+            ))}
+          </div>
+
+          <div className="slider" style={{ marginTop: 12 }}>
+            <div className="row">
+              <span>{L("Espessura", "Thickness")}</span>
+              <span className="val">{esp} cm</span>
+            </div>
+            <input type="range" min={1} max={50} step={1} value={esp} onChange={(e) => setParam("espessura", Number(e.target.value))} />
+          </div>
+          <div className="slider">
+            <div className="row">
+              <span>{L("Distância", "Distance")}</span>
+              <span className="val">{dist} m</span>
+            </div>
+            <input type="range" min={5} max={150} step={5} value={dist} onChange={(e) => setParam("distancia", Number(e.target.value))} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -182,6 +247,8 @@ export function ActionBar() {
   const params = useStore((s) => s.params[s.scenarioId]);
   const setParam = useStore((s) => s.setParam);
   useStore((s) => s.lang);
+
+  const barrierOn = (params?.barreira ?? 1) >= 0.5;
 
   if (scenarioId === "revolver") {
     return (
@@ -195,6 +262,9 @@ export function ActionBar() {
           </button>
           <button className="btn fire" onClick={() => (runtime.input.matrixFire = true)}>
             ⏱️ {L("Matrix", "Matrix")}
+          </button>
+          <button className={`btn ${barrierOn ? "on" : ""}`} onClick={() => setParam("barreira", barrierOn ? 0 : 1)}>
+            🧱 {L("Barreira", "Barrier")}
           </button>
         </div>
       </div>

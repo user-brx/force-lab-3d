@@ -19,7 +19,9 @@ const CAM_OFFSET: Record<string, [number, number, number]> = {
   carro: [5, 2.5, 10],
   aviao: [6, 2.5, 12],
   foguete: [7, 3, 15],
-  revolver: [4, 1.8, 8],
+  // Atrás do carrinho e um pouco de lado: o cano aponta para +x, então a bala
+  // sai "para frente" (para o fundo da cena) e dá para acompanhar o tiro.
+  revolver: [-6, 2.2, 3.5],
   patinadores: [4, 2.2, 9],
 };
 

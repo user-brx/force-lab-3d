@@ -5,7 +5,7 @@ import { PLANET_ORDER, SCENARIOS, SCENARIO_ORDER } from "../index";
 import { airplane } from "../scenarios/airplane";
 import { person } from "../scenarios/person";
 import { car } from "../scenarios/car";
-import { revolver } from "../scenarios/revolver";
+import { revolver, BARRIER_MATERIALS, penetrationDepth, residualVel } from "../scenarios/revolver";
 import { rocket } from "../scenarios/rocket";
 import { skaters } from "../scenarios/skaters";
 import { emptyControls } from "../types";
@@ -71,7 +71,7 @@ describe("Fuzil .50 - conservação de momento e energia da pólvora", () => {
   it("no vácuo com freio de boca, |p_arma| ≈ MUZZLE_BRAKE × |p_bala| e keBala >> keArma", () => {
     const env = makeEnvironment("vacuo", "asfalto");
     // Valores reais do .50 BMG M33 Ball (Barrett M82A1): 42 g a 890 m/s, arma 14 kg
-    const params = { massaBala: 42, velBala: 890, massaArma: 14 };
+    const params = { massaBala: 42, velBala: 890, massaArma: 14, barreira: 0 };
     const s = revolver.init(env, params);
     const fire = { ...emptyControls(), fire: true };
     revolver.step(s, env, params, fire, 0.016);
@@ -90,7 +90,7 @@ describe("Fuzil .50 - conservação de momento e energia da pólvora", () => {
 
   it("cada tiro adiciona uma bala sem apagar as anteriores; Matrix segue a mais recente", () => {
     const env = makeEnvironment("vacuo", "asfalto"); // sem gravidade: as balas não caem
-    const params = { massaBala: 42, velBala: 890, massaArma: 14 };
+    const params = { massaBala: 42, velBala: 890, massaArma: 14, barreira: 0 };
     const s = revolver.init(env, params);
     const fire = () => revolver.step(s, env, params, { ...emptyControls(), fire: true }, 0.01);
     const matrix = () => revolver.step(s, env, params, { ...emptyControls(), matrixFire: true }, 0.01);
@@ -113,10 +113,68 @@ describe("Fuzil .50 - conservação de momento e energia da pólvora", () => {
     expect(view.timeScale).toBeLessThan(1);
   });
 
+  it("barreira (Poncelet): penetração no aço ~25-35 mm; gel deixa atravessar fundo", () => {
+    const mB = 0.042;
+    const v0 = 890;
+    const steel = BARRIER_MATERIALS.find((m) => m.id === "aco")!;
+    const gel = BARRIER_MATERIALS.find((m) => m.id === "gel")!;
+
+    const Paco = penetrationDepth(steel, v0, mB);
+    expect(Paco).toBeGreaterThan(0.02); // > 20 mm
+    expect(Paco).toBeLessThan(0.04); //   < 40 mm (faixa real do .50 BMG)
+
+    const Pgel = penetrationDepth(gel, v0, mB);
+    expect(Pgel).toBeGreaterThan(0.7); // gel: penetra fundo (~1 m)
+    expect(Pgel).toBeGreaterThan(Paco * 10);
+
+    // Placa fina perfura (residual > 0, mas perdeu energia); placa grossa para.
+    expect(residualVel(steel, v0, mB, 0.005)).toBeGreaterThan(0);
+    expect(residualVel(steel, v0, mB, 0.005)).toBeLessThan(v0);
+    expect(residualVel(steel, v0, mB, 0.1)).toBe(0);
+  });
+
+  it("barreira no cenário: chapa fina é atravessada (residual > 0)", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    // aço (material 0), 0.5 cm de espessura, a 10 m → atravessa
+    const params = { massaBala: 42, velBala: 890, massaArma: 14, barreira: 1, material: 0, espessura: 0.5, distancia: 10 };
+    const s = revolver.init(env, params);
+    revolver.step(s, env, params, { ...emptyControls(), fire: true }, 0.001);
+    for (let i = 0; i < 5000 && !s.barrierHit; i++) revolver.step(s, env, params, emptyControls(), 0.002);
+    expect(s.barrierHit).not.toBeNull();
+    expect(s.barrierHit!.perforated).toBe(true);
+    expect(s.barrierHit!.vResidual).toBeGreaterThan(0);
+    expect(s.barrierHit!.vResidual).toBeLessThan(890);
+  });
+
+  it("Matrix: ao cravar na parede, a câmera trava na barreira (foco) por um instante", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { massaBala: 42, velBala: 890, massaArma: 14, barreira: 1, material: 0, espessura: 20, distancia: 10 };
+    const s = revolver.init(env, params);
+    revolver.step(s, env, params, { ...emptyControls(), matrixFire: true }, 0.001);
+    for (let i = 0; i < 5000 && !s.barrierHit; i++) revolver.step(s, env, params, emptyControls(), 0.002);
+    expect(s.barrierHit!.perforated).toBe(false); // cravou nos 20 cm de aço
+    expect(s.focusT).toBeGreaterThan(0); // foco da câmera ativo
+    const view = revolver.view(s, env, params);
+    expect(view.cameraTarget!.x).toBeCloseTo(10, 1); // câmera travada na parede (x ≈ distância)
+    expect(view.timeScale).toBeLessThan(1); // ainda em câmera lenta para ver o resultado
+  });
+
+  it("barreira grossa de aço crava a bala (não atravessa, energia toda depositada)", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { massaBala: 42, velBala: 890, massaArma: 14, barreira: 1, material: 0, espessura: 20, distancia: 10 };
+    const s = revolver.init(env, params);
+    revolver.step(s, env, params, { ...emptyControls(), fire: true }, 0.001);
+    for (let i = 0; i < 5000 && !s.barrierHit; i++) revolver.step(s, env, params, emptyControls(), 0.002);
+    expect(s.barrierHit).not.toBeNull();
+    expect(s.barrierHit!.perforated).toBe(false);
+    expect(s.barrierHit!.vResidual).toBe(0);
+    expect(s.bullets.length).toBe(0); // cravou e sumiu
+  });
+
   it("Cd cresce no transônico e cai no supersônico (curva real do M33)", () => {
     // O arrasto na Terra deve frear a bala mais rápido que o modelo de Cd constante.
     const env = makeEnvironment("terra", "asfalto");
-    const params = { massaBala: 42, velBala: 890, massaArma: 14 };
+    const params = { massaBala: 42, velBala: 890, massaArma: 14, barreira: 0 };
     const s = revolver.init(env, params);
     revolver.step(s, env, params, { ...emptyControls(), fire: true }, 0.001);
     // Desaceleração inicial por arrasto: a ≈ ½ρv²·Cd·A / m, com Cd(Mach 2,6) ≈ 0,30.

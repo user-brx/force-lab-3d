@@ -1,7 +1,7 @@
 import { forwardRef, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { PLANETS } from "../physics";
+import { BARRIER_CENTER_Y, BARRIER_HEIGHT, BARRIER_MATERIALS, PLANETS } from "../physics";
 import { useStore } from "../state/store";
 import { runtime } from "./runtime";
 
@@ -95,6 +95,28 @@ export const Humanoid = forwardRef<THREE.Group, HumanoidProps>(
             <sphereGeometry args={[0.17, 24, 24]} />
             <meshStandardMaterial color={skin} roughness={0.6} />
           </mesh>
+          {/* rosto na frente do boneco (+z local = direção em que ele anda) */}
+          <group position={[0, 1.62, 0]}>
+            {/* olhos */}
+            <mesh position={[-0.062, 0.05, 0.14]} castShadow>
+              <sphereGeometry args={[0.028, 12, 12]} />
+              <meshStandardMaterial color="#10151f" roughness={0.4} />
+            </mesh>
+            <mesh position={[0.062, 0.05, 0.14]} castShadow>
+              <sphereGeometry args={[0.028, 12, 12]} />
+              <meshStandardMaterial color="#10151f" roughness={0.4} />
+            </mesh>
+            {/* nariz */}
+            <mesh position={[0, 0, 0.16]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+              <coneGeometry args={[0.03, 0.07, 10]} />
+              <meshStandardMaterial color="#d89a6e" roughness={0.6} />
+            </mesh>
+            {/* boca */}
+            <mesh position={[0, -0.075, 0.145]} castShadow>
+              <boxGeometry args={[0.08, 0.018, 0.02]} />
+              <meshStandardMaterial color="#7a3b3b" roughness={0.5} />
+            </mesh>
+          </group>
         </group>
       </group>
     );
@@ -328,6 +350,33 @@ export const BulletModel = forwardRef<THREE.Group, object>((_, ref) => (
   </group>
 ));
 BulletModel.displayName = "BulletModel";
+
+// Barreira-alvo do Fuzil .50. Lê material/espessura/distância do store e se
+// posiciona sozinha (não é um corpo posicionado pela física).
+export function BarrierModel() {
+  const params = useStore((s) => s.params.revolver);
+  const on = (params?.barreira ?? 1) >= 0.5;
+  const matIdx = Math.round(params?.material ?? 0);
+  const T = (params?.espessura ?? 10) / 100; // m
+  const D = params?.distancia ?? 25; // m
+  if (!on) return null;
+  const mat = BARRIER_MATERIALS[matIdx] ?? BARRIER_MATERIALS[0];
+  const translucent = mat.id === "vidro" || mat.id === "gel";
+  return (
+    <group position={[D + T / 2, BARRIER_CENTER_Y, 0]}>
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[T, BARRIER_HEIGHT, 2.2]} />
+        <meshStandardMaterial
+          color={mat.color}
+          metalness={mat.id === "aco" ? 0.8 : 0.05}
+          roughness={mat.id === "aco" ? 0.35 : mat.id === "vidro" ? 0.08 : 0.85}
+          transparent={translucent}
+          opacity={mat.id === "vidro" ? 0.35 : mat.id === "gel" ? 0.55 : 1}
+        />
+      </mesh>
+    </group>
+  );
+}
 
 export const AirplaneModel = forwardRef<THREE.Group, { jet?: boolean }>(({ jet = false }, ref) => {
   const prop = useRef<THREE.Group>(null);

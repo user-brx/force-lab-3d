@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { useStore } from "../state/store";
 import { runtime } from "./runtime";
 import { toScene } from "./transform";
-import { AirplaneModel, BulletModel, CarModel, Humanoid, RevolverModel, RocketModel } from "./models";
+import { AirplaneModel, BarrierModel, BulletModel, CarModel, Humanoid, RevolverModel, RocketModel } from "./models";
 
 // Renderiza os modelos do cenário ativo e atualiza a transform de cada um
 // a cada frame, a partir do snapshot da física.
@@ -49,6 +49,7 @@ export function Bodies() {
           {Array.from({ length: 16 }, (_, i) => (
             <BulletModel key={i} ref={reg(`bullet${i}`)} />
           ))}
+          <BarrierModel />
         </>
       )}
       {scenarioId === "patinadores" && (

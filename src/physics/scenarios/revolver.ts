@@ -1,7 +1,7 @@
 import { fmt } from "../format";
 import { L } from "../i18n";
-import { vec } from "../math";
-import type { Scenario, SceneView, ShockEmit, ForceArrow, Readout, Metric, SceneLabel } from "../types";
+import { vec, type Vec3 } from "../math";
+import type { Scenario, SceneView, ShockEmit, ForceArrow, Readout, Metric, SceneLabel, ParticleEmit } from "../types";
 
 // Fuzil .50 BMG (Barrett M82A1) sobre um carrinho de teste com bipé.
 // O gás da pólvora empurra a projétil para frente E o fundo do cano para trás,
@@ -20,6 +20,19 @@ interface Bullet {
   vy: number;
   dist: number;   // distância percorrida (m)
   shockT: number; // acumulador para emitir ondas de choque
+  hit: boolean;   // já interagiu com a barreira (não reprocessa)
+  spent: boolean; // cravou na barreira (marcada para remoção)
+}
+
+// Resultado do último impacto numa barreira (para o HUD).
+interface BarrierHit {
+  materialId: string;
+  vImpact: number;   // m/s na hora do impacto
+  energyJ: number;   // energia depositada na barreira (J)
+  penDepth: number;  // profundidade num alvo semi-infinito (m)
+  thickness: number; // espessura da barreira (m)
+  perforated: boolean;
+  vResidual: number; // m/s ao sair (0 se parou dentro)
 }
 
 interface RevolverState {
@@ -35,6 +48,10 @@ interface RevolverState {
   tSinceFire: number;
   prevFire: boolean;
   events: ShockEmit[];
+  particleQueue: ParticleEmit[]; // rajadas de partículas a emitir uma vez (impacto)
+  barrierHit: BarrierHit | null; // último impacto numa barreira (para o HUD)
+  focusAt: Vec3 | null; // a câmera trava neste ponto (impacto na barreira) por focusT
+  focusT: number;       // tempo restante de foco na barreira (s de simulação)
 }
 
 // .50 BMG / Barrett M82A1 com projétil M33 Ball (661 gr ≈ 42 g a 890 m/s) - valores reais
@@ -44,6 +61,7 @@ const MUZZLE_BRAKE    = 0.38;  // fração do recuo transmitida ao carrinho (~62
 const SHOT_WINDOW     = 0.05;  // s (janela para força média)
 const MATRIX_RANGE    = 1000;  // m (segue a bala até 1 km em câmera lenta)
 const MAX_BULLETS     = 16;    // teto de balas simultâneas (= pool de modelos na cena)
+const FOCUS_DUR       = 0.35;  // s de simulação que a câmera trava na barreira (~4,4 s reais a 0,08×)
 // Projétil .50 BMG: diâmetro 12,95 mm → área frontal = π·(0,006475)² ≈ 1,317×10⁻⁴ m²
 const BULLET_AREA     = 1.317e-4; // m²
 
@@ -64,6 +82,67 @@ function bulletCd(mach: number): number {
   return CD_VAL[CD_VAL.length - 1];
 }
 
+// --- Barreira-alvo: materiais reais + penetração de Poncelet -----------------
+// Modelo de Poncelet: a resistência do alvo tem um termo estático R (resistência
+// dinâmica de penetração, maior que o escoamento estático) e um inercial ρ·v².
+//   Profundidade (alvo semi-infinito):  P = (m / (2·A·ρ)) · ln(1 + ρ·v²/R)
+//   Velocidade residual após espessura T: v_r² = (v² + R/ρ)·e^(-2·A·ρ·T/m) − R/ρ
+// Os valores de ρ e R são calibrados para reproduzir a penetração real do .50 BMG
+// (42 g a 890 m/s): aço ~29 mm, concreto ~12 cm, areia ~0,5 m, gel ~1 m.
+export interface BarrierMaterial {
+  id: string;
+  label: string;
+  labelEn: string;
+  rho: number;      // densidade (kg/m³)
+  Rt: number;       // resistência de penetração (Pa)
+  color: string;    // cor do modelo 3D
+  brittle: boolean; // estilhaça (vidro, concreto) → mais fragmentos
+}
+
+export const BARRIER_MATERIALS: BarrierMaterial[] = [
+  { id: "aco",      label: "Aço",           labelEn: "Steel",         rho: 7850, Rt: 2.0e9, color: "#8a929e", brittle: false },
+  { id: "concreto", label: "Concreto",      labelEn: "Concrete",      rho: 2400, Rt: 4.0e8, color: "#b7b3a6", brittle: true  },
+  { id: "madeira",  label: "Madeira",       labelEn: "Wood",          rho: 700,  Rt: 4.5e7, color: "#9b6b3f", brittle: false },
+  { id: "gel",      label: "Gel balístico", labelEn: "Ballistic gel", rho: 1040, Rt: 1.5e6, color: "#bfe6c8", brittle: false },
+  { id: "vidro",    label: "Vidro",         labelEn: "Glass",         rho: 2500, Rt: 9.0e7, color: "#a9d4e0", brittle: true  },
+  { id: "areia",    label: "Areia",         labelEn: "Sand",          rho: 1600, Rt: 9.0e6, color: "#cda874", brittle: false },
+];
+
+// Geometria da barreira (compartilhada com o modelo 3D). Encosta no chão.
+export const BARRIER_CENTER_Y = 0.8; // m (centro vertical)
+export const BARRIER_HEIGHT   = 1.6; // m (cobre a linha do cano ~0,5 m)
+
+/** Profundidade de penetração num alvo semi-infinito (m) - equação de Poncelet. */
+export function penetrationDepth(mat: BarrierMaterial, v: number, mB: number): number {
+  return (mB / (2 * BULLET_AREA * mat.rho)) * Math.log(1 + (mat.rho * v * v) / mat.Rt);
+}
+
+/** Velocidade ao atravessar uma espessura T (m); 0 se a bala parar dentro. */
+export function residualVel(mat: BarrierMaterial, v: number, mB: number, T: number): number {
+  const v2 = (v * v + mat.Rt / mat.rho) * Math.exp((-2 * BULLET_AREA * mat.rho * T) / mB) - mat.Rt / mat.rho;
+  return v2 > 0 ? Math.sqrt(v2) : 0;
+}
+
+/** Formata uma profundidade em mm / cm / m conforme a escala. */
+function fmtDepth(m: number): { value: string; unit: string } {
+  if (m < 0.01) return { value: fmt(m * 1000, 1), unit: "mm" };
+  if (m < 1) return { value: fmt(m * 100, 1), unit: "cm" };
+  return { value: fmt(m, 2), unit: "m" };
+}
+
+/** Efeitos visuais do impacto na barreira (clarão + poeira/fragmentos). */
+function spawnImpact(s: RevolverState, mat: BarrierMaterial, at: Vec3, perforated: boolean) {
+  s.events.push({ at, kind: "blast", color: "#ffd27a", maxRadius: 1.2, life: 0.3 }); // clarão
+  const puffs = mat.brittle ? 3 : 2;
+  for (let i = 0; i < puffs; i++) {
+    s.events.push({ at, kind: "blast", color: mat.color, maxRadius: 1.4 + i * 0.5, life: 0.5 });
+  }
+  // Fragmentos para trás (lado da entrada).
+  s.particleQueue.push({ at, dir: vec(-1, 0.35, 0), speed: 9, spread: 0.7, count: mat.brittle ? 14 : 9, kind: "dust" });
+  // Spall para frente (lado da saída), só se atravessou.
+  if (perforated) s.particleQueue.push({ at, dir: vec(1, 0.2, 0), speed: 11, spread: 0.5, count: mat.brittle ? 12 : 7, kind: "dust" });
+}
+
 export const revolver: Scenario<RevolverState> = {
   id: "revolver",
   label: "Fuzil .50",
@@ -76,6 +155,11 @@ export const revolver: Scenario<RevolverState> = {
     massaBala: { label: "Massa do projétil", labelEn: "Bullet mass",    min: 30, max: 60,   step: 1,   default: 42,  unit: "g"   },
     velBala:   { label: "Velocidade de saída", labelEn: "Muzzle velocity", min: 700, max: 1200, step: 10,  default: 890, unit: "m/s" },
     massaArma: { label: "Massa fuzil+bipé",  labelEn: "Rifle+bipod mass", min: 5,  max: 30,   step: 0.5, default: 14,  unit: "kg"  },
+    // Barreira-alvo (UI customizada em Controls; não renderizar como slider genérico).
+    barreira:  { label: "Barreira",  labelEn: "Barrier",   min: 0, max: 1, step: 1, default: 1, unit: "" },
+    material:  { label: "Material",  labelEn: "Material",  min: 0, max: BARRIER_MATERIALS.length - 1, step: 1, default: 0, unit: "" },
+    espessura: { label: "Espessura", labelEn: "Thickness", min: 1, max: 50, step: 1, default: 10, unit: "cm" },
+    distancia: { label: "Distância", labelEn: "Distance",  min: 5, max: 150, step: 5, default: 25, unit: "m" },
   },
 
   init: () => ({
@@ -88,6 +172,10 @@ export const revolver: Scenario<RevolverState> = {
     tSinceFire: 999,
     prevFire: false,
     events: [],
+    particleQueue: [],
+    barrierHit: null,
+    focusAt: null,
+    focusT: 0,
   }),
 
   step(s, env, params, c, dt) {
@@ -96,6 +184,13 @@ export const revolver: Scenario<RevolverState> = {
     const mG = params.massaArma ?? 14;
     const space = env.g <= 0;
     s.tSinceFire += dt;
+    if (s.focusT > 0) s.focusT = Math.max(0, s.focusT - dt);
+
+    // Barreira-alvo.
+    const barrierOn = (params.barreira ?? 1) >= 0.5;
+    const mat = BARRIER_MATERIALS[Math.round(params.material ?? 0)] ?? BARRIER_MATERIALS[0];
+    const barrierT = (params.espessura ?? 10) / 100; // cm → m
+    const barrierD = params.distancia ?? 25;          // m (face frontal)
 
     // Disparo: gatilho de subida (rising-edge) - nunca re-dispara no mesmo substep.
     if ((c.fire || c.matrixFire) && !s.prevFire) {
@@ -107,7 +202,7 @@ export const revolver: Scenario<RevolverState> = {
 
       // Nova bala (não apaga as anteriores): entra no fim da lista. A mais recente
       // é sempre a última do array e é a que a câmera Matrix segue.
-      s.bullets.push({ x: muzzle.x, y: muzzle.y, vx: vB * dx, vy: vB * dy, dist: 0, shockT: 0 });
+      s.bullets.push({ x: muzzle.x, y: muzzle.y, vx: vB * dx, vy: vB * dy, dist: 0, shockT: 0, hit: false, spent: false });
       if (s.bullets.length > MAX_BULLETS) s.bullets.shift(); // descarta a mais antiga
       if (c.matrixFire) s.matrixActive = true;
       s.tSinceFire = 0;
@@ -166,9 +261,41 @@ export const revolver: Scenario<RevolverState> = {
       }
 
       if (env.g > 0) b.vy -= env.g * dt;
+      const x0 = b.x;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.dist += speed * dt;
+
+      // Impacto na barreira: a bala cruzou o plano x = D dentro da altura do alvo.
+      if (barrierOn && !b.hit && b.vx > 0 && x0 < barrierD && b.x >= barrierD &&
+          Math.abs(b.y - BARRIER_CENTER_Y) <= BARRIER_HEIGHT / 2) {
+        b.hit = true;
+        // Se a câmera lenta estava seguindo ESTA bala, trava na parede um
+        // instante para dar tempo de ver o resultado do impacto.
+        if (s.matrixActive && b === s.bullets[s.bullets.length - 1]) {
+          s.focusAt = vec(barrierD, b.y, 0);
+          s.focusT = FOCUS_DUR;
+        }
+        const vImpact = speed; // velocidade ao chegar (≈ a deste substep)
+        const P = penetrationDepth(mat, vImpact, mB);
+        if (P > barrierT) {
+          // Atravessa: continua com velocidade residual, emergindo na face traseira.
+          const vr = residualVel(mat, vImpact, mB, barrierT);
+          const k = vImpact > 0 ? vr / vImpact : 0;
+          b.vx *= k;
+          b.vy *= k;
+          b.x = barrierD + barrierT;
+          s.barrierHit = { materialId: mat.id, vImpact, energyJ: 0.5 * mB * (vImpact * vImpact - vr * vr), penDepth: P, thickness: barrierT, perforated: true, vResidual: vr };
+          spawnImpact(s, mat, vec(barrierD, b.y, 0), true);
+        } else {
+          // Crava: para dentro da barreira (toda a energia é depositada).
+          b.vx = 0;
+          b.vy = 0;
+          b.spent = true;
+          s.barrierHit = { materialId: mat.id, vImpact, energyJ: 0.5 * mB * vImpact * vImpact, penDepth: P, thickness: barrierT, perforated: false, vResidual: 0 };
+          spawnImpact(s, mat, vec(barrierD, b.y, 0), false);
+        }
+      }
 
       // Ondas de choque supersônicas.
       const mach = speed / env.soundSpeed;
@@ -183,10 +310,10 @@ export const revolver: Scenario<RevolverState> = {
       }
     }
 
-    // Remove as balas que sumiram (caíram no chão ou saíram bem longe).
+    // Remove as balas que sumiram (cravaram na barreira, caíram ou saíram longe).
     s.bullets = s.bullets.filter((b) => {
       const far = Math.hypot(b.x - s.gunX, b.y - s.gunY) > 50000;
-      return !(far || (env.g > 0 && b.y < 0));
+      return !(b.spent || far || (env.g > 0 && b.y < 0));
     });
 
     // Matrix segue a última bala que saiu do cano (a mais recente da lista).
@@ -216,6 +343,8 @@ export const revolver: Scenario<RevolverState> = {
     const dy = Math.sin(s.gunAngle);
     const shocks = s.events;
     s.events = [];
+    const queued = s.particleQueue;
+    s.particleQueue = [];
 
     const comY = 0.40 + s.gunY;
     const bodies: SceneView["bodies"] = [{ id: "gun", position: vec(s.gunX, comY, 0), rotation: s.gunAngle }];
@@ -284,6 +413,22 @@ export const revolver: Scenario<RevolverState> = {
       metrics.push({ label: L("Veloc. de recuo", "Recoil speed"), value: recoilSpeed, unit: "m/s", color: "#4D9FFF" });
     }
 
+    // Resultado do último impacto na barreira (persiste até o próximo tiro/reset).
+    if (s.barrierHit) {
+      const h = s.barrierHit;
+      const hMat = BARRIER_MATERIALS.find((m) => m.id === h.materialId) ?? BARRIER_MATERIALS[0];
+      const pen = fmtDepth(h.penDepth);
+      readouts.push(
+        { label: L("Barreira atingida", "Barrier hit"), value: L(hMat.label, hMat.labelEn), unit: "", highlight: true },
+        { label: L("Veloc. de impacto", "Impact speed"), value: fmt(h.vImpact, 0), unit: "m/s" },
+        { label: L("Energia de impacto", "Impact energy"), value: fmt((0.5 * mB * h.vImpact * h.vImpact) / 1000, 1), unit: "kJ" },
+        { label: L("Penetração máx.", "Max penetration"), value: pen.value, unit: pen.unit },
+        { label: L("Resultado", "Result"), value: h.perforated ? L("ATRAVESSOU", "PERFORATED") : L("PAROU DENTRO", "STOPPED"), unit: "", highlight: true },
+      );
+      if (h.perforated) readouts.push({ label: L("Veloc. de saída", "Exit speed"), value: fmt(h.vResidual, 0), unit: "m/s" });
+      readouts.push({ label: L("Energia na barreira", "Energy into barrier"), value: fmt(h.energyJ / 1000, 1), unit: "kJ" });
+    }
+
     return {
       bodies,
       forces,
@@ -316,15 +461,23 @@ export const revolver: Scenario<RevolverState> = {
         "horizontal shot from ~0.5 m height hits the ground within a few hundred metres (drop = ½·g·t²). " +
         "At optimal elevation (~30°) the maximum range reaches ~6.8 km.",
       ),
-      particles: showShot
-        ? [
-            { at: muzzle, dir: vec(dx, dy + 0.05, 0), speed: 14, spread: 0.25, count: 8, kind: "exhaust" },
-            { at: vec(s.gunX - 0.3 * dx, comY + 0.12, 0), dir: vec(-dx, 0.15, 0), speed: 4, spread: 0.5, count: 4, kind: "smoke" },
-          ]
-        : [],
+      particles: [
+        ...(showShot
+          ? [
+              { at: muzzle, dir: vec(dx, dy + 0.05, 0), speed: 14, spread: 0.25, count: 8, kind: "exhaust" as const },
+              { at: vec(s.gunX - 0.3 * dx, comY + 0.12, 0), dir: vec(-dx, 0.15, 0), speed: 4, spread: 0.5, count: 4, kind: "smoke" as const },
+            ]
+          : []),
+        ...queued, // rajadas de impacto na barreira
+      ],
       shocks,
-      cameraTarget: (s.matrixActive && newest) ? vec(newest.x, newest.y, 0) : vec(s.gunX, 0.7 + s.gunY, 0),
-      timeScale: (s.matrixActive && newest) ? 0.08 : 1, // câmera lenta seguindo a última bala que saiu
+      // Câmera: 1º trava na parede após impacto (foco); senão segue a bala no
+      // Matrix; senão volta para a arma. O foco mantém a câmera lenta para ver o
+      // resultado mesmo depois de a bala cravar e sumir.
+      cameraTarget: s.focusT > 0 && s.focusAt
+        ? s.focusAt
+        : (s.matrixActive && newest) ? vec(newest.x, newest.y, 0) : vec(s.gunX, 0.7 + s.gunY, 0),
+      timeScale: (s.focusT > 0 && s.focusAt) || (s.matrixActive && newest) ? 0.08 : 1,
     };
   },
 };

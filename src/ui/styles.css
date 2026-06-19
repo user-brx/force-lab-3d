@@ -567,6 +567,13 @@ input[type="range"]::-moz-range-thumb {
     justify-content: flex-start;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    /* pan-x: o dedo arrasta o carrossel na horizontal (iOS travava sem isto) */
+    touch-action: pan-x;
+    /* borda leve delimitando o carrossel no mobile */
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(15, 23, 40, 0.5);
+    padding: 5px;
   }
   .chips::-webkit-scrollbar {
     display: none;
@@ -602,6 +609,10 @@ input[type="range"]::-moz-range-thumb {
     align-items: stretch;
     overflow-y: auto;
     min-height: 0;
+    /* o menu suspenso precisa capturar o toque e rolar na vertical no iPhone */
+    pointer-events: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
   .left-col,
   .right-col {
@@ -620,13 +631,20 @@ input[type="range"]::-moz-range-thumb {
     display: flex;
     align-items: center;
     justify-content: center;
-    bottom: 108px; /* acima da actionbar (~52px) + bottombar (~44px) */
+    bottom: 144px; /* acima do bottom-stack (ações + playback + borda) */
   }
   .panel {
     padding: 11px;
   }
   .graph {
     height: 80px;
+  }
+  /* Borda leve agrupando ações + playback (carrossel inferior) no mobile */
+  .bottom-stack {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(15, 23, 40, 0.5);
+    padding: 6px;
   }
   /* Bottombar em rolagem horizontal - evita 2 linhas e sobreposição com o toggle */
   .bottombar {
@@ -635,6 +653,7 @@ input[type="range"]::-moz-range-thumb {
     justify-content: flex-start;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    touch-action: pan-x;
   }
   .bottombar::-webkit-scrollbar {
     display: none;

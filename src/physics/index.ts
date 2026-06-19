@@ -16,6 +16,9 @@ export {
   surfaceDesc,
 } from "./environments";
 
+export { BARRIER_MATERIALS, BARRIER_CENTER_Y, BARRIER_HEIGHT } from "./scenarios/revolver";
+export type { BarrierMaterial } from "./scenarios/revolver";
+
 import { airplane } from "./scenarios/airplane";
 import { car } from "./scenarios/car";
 import { person } from "./scenarios/person";
