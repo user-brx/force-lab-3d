@@ -21,6 +21,8 @@ interface PersonState {
   fsMax: number; // atrito estático máximo, N
   stepPhase: number;
   shockT: number;
+  eMuscular: number;
+  eDissipated: number;
   events: ShockEmit[];
 }
 
@@ -51,6 +53,8 @@ export const person: Scenario<PersonState> = {
     fsMax: 0,
     stepPhase: 0,
     shockT: 0,
+    eMuscular: 0,
+    eDissipated: 0,
     events: [],
   }),
 
@@ -85,6 +89,10 @@ export const person: Scenario<PersonState> = {
     s.aBody = s.propulsion / (env.bodyMass || EARTH_MASS); // 2ª lei para o astro
 
     s.v = Math.max(0, s.v + s.accel * dt);
+
+    s.eMuscular += Math.abs(s.propulsion) * s.v * dt;
+    s.eDissipated += Math.abs(s.resist) * s.v * dt;
+
     s.x += s.v * dt;
     s.stepPhase += Math.abs(s.v) * dt * 2.2;
 
@@ -151,6 +159,11 @@ export const person: Scenario<PersonState> = {
       ],
       bars: [],
       metrics: [{ label: L("Velocidade", "Speed"), value: s.v, unit: "m/s", color: "#4D9FFF" }],
+      energies: [
+        { label: L("Trabalho Muscular", "Muscular Work"), value: s.eMuscular, color: "#e7c96a" },
+        { label: L("Cinética", "Kinetic"), value: 0.5 * m * s.v * s.v, color: "#4d9fff" },
+        { label: L("Dissipada", "Dissipated"), value: s.eDissipated, color: "#ff6b2b" },
+      ],
       note:
         env.g <= 0
           ? L("Sem gravidade não há atrito para empurrar - sem caminhada.", "No gravity means no friction to push against - no walking.")

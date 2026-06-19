@@ -16,6 +16,7 @@ interface SkaterState {
   v2: number;
   F: number; // força de contato atual (N)
   prevPushing: boolean;
+  eDissipated: number;
   events: ShockEmit[];
 }
 
@@ -37,7 +38,7 @@ export const skaters: Scenario<SkaterState> = {
     forca: { label: "Força do empurrão", labelEn: "Push force", min: 100, max: 600, step: 10, default: 300, unit: "N" },
   },
 
-  init: () => ({ t: 0, armed: false, x1: -GAP, v1: 0, x2: GAP, v2: 0, F: 0, prevPushing: false, events: [] }),
+  init: () => ({ t: 0, armed: false, x1: -GAP, v1: 0, x2: GAP, v2: 0, F: 0, prevPushing: false, eDissipated: 0, events: [] }),
 
   step(s, env, params, c, dt) {
     // "Empurrar" reinicia as posições e dispara o empurrão. "Reiniciar" (reset
@@ -71,8 +72,11 @@ export const skaters: Scenario<SkaterState> = {
       return -Math.sign(v) * env.muK * env.g;
     };
     if (!pushing) {
-      a1 += fric(s.v1);
-      a2 += fric(s.v2);
+      const f1 = fric(s.v1);
+      const f2 = fric(s.v2);
+      a1 += f1;
+      a2 += f2;
+      s.eDissipated += (Math.abs(f1 * m1 * s.v1) + Math.abs(f2 * m2 * s.v2)) * dt;
     }
 
     const v1n = s.v1 + a1 * dt;
@@ -137,6 +141,11 @@ export const skaters: Scenario<SkaterState> = {
         { label: L("Momento azul", "Blue momentum"), value: fmt(Math.abs(p1), 1), unit: "kg·m/s" },
         { label: L("Momento vermelho", "Red momentum"), value: fmt(Math.abs(p2), 1), unit: "kg·m/s" },
         { label: L("Momento total", "Total momentum"), value: fmt(total, 2), unit: "kg·m/s", highlight: true },
+      ],
+      energies: [
+        { label: L("Cinética Azul", "Blue Kinetic"), value: 0.5 * m1 * s.v1 * s.v1, color: "#4d9fff" },
+        { label: L("Cinética Vermelho", "Red Kinetic"), value: 0.5 * m2 * s.v2 * s.v2, color: "#e7c96a" },
+        { label: L("Dissipada", "Dissipated"), value: s.eDissipated, color: "#ff6b2b" },
       ],
       bars: [],
       metrics: [

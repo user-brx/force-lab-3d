@@ -390,6 +390,37 @@ input[type="range"]::-moz-range-thumb {
   transition: width 0.1s linear;
 }
 
+.bar .track.stacked {
+  display: flex;
+  background: transparent;
+  gap: 2px;
+}
+
+.bar .track.stacked .fill {
+  border-radius: 4px;
+}
+
+.energy-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 8px;
+}
+
+.energy-legend .item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.energy-legend .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
 /* Gráfico em tempo real */
 .graph {
   display: block;

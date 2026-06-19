@@ -92,7 +92,7 @@ export function Engine() {
     if (hudClock.current >= HUD_INTERVAL) {
       hudClock.current = 0;
       const v = runtime.view;
-      st.setHud({ readouts: v.readouts, bars: v.bars, note: v.note, source: v.source });
+      st.setHud({ readouts: v.readouts, bars: v.bars, note: v.note, source: v.source, energies: v.energies });
     }
   });
 

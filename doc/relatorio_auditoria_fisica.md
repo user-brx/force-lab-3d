@@ -274,30 +274,12 @@ Estas NÃO são erros — são simplificações honestas, devidamente documentad
 
 | # | Simplificação | Impacto | Onde |
 |---|---|---|---|
-| 1 | **Sem arrasto transônico** no avião | Cruza Mach 1 mais fácil do que a realidade | [airplane.ts](../src/physics/scenarios/airplane.ts) |
-| 2 | **Modelo atmosférico isotérmico** | Superestima a densidade na estratosfera (~2× a 30 km) | [constants.ts](../src/physics/constants.ts) |
-| 3 | **Euler semi-implícito** | Erro numérico ~1-3% vs. analítico (aceitável) | [Engine.tsx](../src/scene/Engine.tsx) |
-| 4 | **Astro não se desloca** (3ª lei) | A aceleração é calculada e exibida, mas o planeta não move (massa gigantesca → invisível) | [person.ts](../src/physics/scenarios/person.ts) |
+| 1 | **Euler semi-implícito** | Erro numérico ~1-3% vs. analítico (aceitável) | [Engine.tsx](../src/scene/Engine.tsx) |
+| 2 | **Astro não se desloca** (3ª lei) | A aceleração é calculada e exibida, mas o planeta não move (massa gigantesca → invisível) | [person.ts](../src/physics/scenarios/person.ts) |
+| 3 | **Resistência de rolamento** | O CRR é constante (0.012), sem a leve variação com a velocidade. Impacto negligível. | [car.ts](../src/physics/scenarios/car.ts) |
 
 ---
-
-## 3. Pontos de Atenção Menores (Não São Erros)
-
-> [!WARNING]
-> Estes são pontos de atenção encontrados na auditoria. Nenhum constitui um erro de física, mas podem ser melhorias futuras.
-
-### 3.1. Atmosfera isotérmica vs. ISA real
-O modelo `ρ(h) = ρ₀·e^(-h/H)` é excelente até ~20 km, mas diverge na estratosfera. A 30 km, o modelo dá ~0.035 kg/m³ vs. ISA real ~0.018 kg/m³ (diferença de ~2×). Impacto: o arrasto do foguete na estratosfera é superestimado, mas como o foguete já está rápido lá, o efeito é pequeno.
-
-### 3.2. Temperatura atmosférica não modelada
-A velocidade do som é constante no código (`soundSpeed` fixo por planeta), mas na realidade varia com a temperatura (e portanto com a altitude). Impacto: o número de Mach do foguete em altitude elevada pode estar levemente impreciso. Para um simulador educacional, isso é perfeitamente aceitável.
-
-### 3.3. Resistência de rolamento do carro simplificada
-O `CRR = 0.012` é aplicado como `CRR * N` (independente da velocidade). Na realidade, CRR tem uma pequena componente dependente da velocidade. Impacto: negligível na faixa de velocidades simulada.
-
----
-
-## 4. Resultado dos Testes
+## 3. Resultado dos Testes
 
 ### Testes Originais (53)
 
@@ -327,13 +309,14 @@ O `CRR = 0.012` é aplicado como `CRR * N` (independente da velocidade). Na real
 ✓ Patinadores - conservação de momento e proporções (4 testes)
 ✓ Planetas - dados vs. NASA Planetary Fact Sheet (5 testes)
 ✓ Integração numérica - estabilidade e precisão (3 testes)
+✓ Conservação de Energia (3 novos testes: Patinadores, Carro, Avião)
 ```
 
-**Total: 117/117 ✅**
+**Total: 124/124 ✅**
 
 ---
 
-## 5. Conclusão
+## 4. Conclusão
 
 O simulador **Laboratório de Forças 3D** é fisicamente correto dentro das simplificações declaradas. A qualidade da implementação é notável:
 

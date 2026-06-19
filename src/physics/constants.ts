@@ -34,9 +34,66 @@ export const gravityAt = (h: number, gSurface: number = G0, radius: number = EAR
   return gSurface * r * r;
 };
 
-/** Densidade do ar em função da altitude (modelo exponencial isotérmico). */
+/**
+ * Densidade do ar na Terra pelo modelo da Atmosfera Padrão Internacional (ISA).
+ * Considera 3 camadas: Troposfera (até 11km), Tropopausa (11-20km) e Estratosfera (20-47km).
+ */
+export const airDensityISA = (h: number): number => {
+  if (h <= 0) return AIR_DENSITY_SL;
+  
+  const T0 = 288.15;
+  const g = G0;
+  const R = 287.05;
+
+  if (h <= 11000) {
+    const L = -0.0065;
+    const T = T0 + L * h;
+    return AIR_DENSITY_SL * Math.pow(T / T0, -g / (R * L) - 1);
+  } else if (h <= 20000) {
+    const h11 = 11000;
+    const T11 = 216.65;
+    const L = -0.0065;
+    const rho11 = AIR_DENSITY_SL * Math.pow(T11 / T0, -g / (R * L) - 1);
+    return rho11 * Math.exp(-g * (h - h11) / (R * T11));
+  } else {
+    const h20 = 20000;
+    const T11 = 216.65;
+    const L11 = -0.0065;
+    const rho11 = AIR_DENSITY_SL * Math.pow(T11 / T0, -g / (R * L11) - 1);
+    const rho20 = rho11 * Math.exp(-g * (20000 - 11000) / (R * T11));
+    const L = 0.001;
+    const T = T11 + L * (h - h20);
+    
+    if (h <= 47000) {
+      return rho20 * Math.pow(T / T11, -g / (R * L) - 1);
+    } else {
+      const T47 = T11 + L * (47000 - h20);
+      const rho47 = rho20 * Math.pow(T47 / T11, -g / (R * L) - 1);
+      return rho47 * Math.exp(-g * (h - 47000) / (R * T47));
+    }
+  }
+};
+
+/** Densidade do ar em função da altitude (modelo exponencial para exoplanetas, ISA para a Terra). */
 export const airDensityAt = (
   h: number,
   rho0: number = AIR_DENSITY_SL,
   scaleHeight: number = ATMOS_SCALE_HEIGHT,
-): number => rho0 * Math.exp(-Math.max(0, h) / scaleHeight);
+): number => {
+  if (rho0 === AIR_DENSITY_SL && scaleHeight === ATMOS_SCALE_HEIGHT) {
+    return airDensityISA(h);
+  }
+  return rho0 * Math.exp(-Math.max(0, h) / scaleHeight);
+};
+
+/**
+ * Velocidade do som em função da altitude (m), baseada na variação de temperatura (Lapse Rate ISA).
+ * Para a Terra: a(h) = a0 * sqrt(T(h) / T0). T0 = 288.15 K.
+ */
+export const soundSpeedAt = (h: number, soundSpeed0: number = SOUND_SPEED_SL): number => {
+  if (soundSpeed0 <= 0) return 0;
+  // Lapse rate ISA simplificado: T cai a -6.5 K/km até 11km, depois constante
+  const T0 = 288.15;
+  const T = Math.max(216.65, T0 - 0.0065 * Math.max(0, h));
+  return soundSpeed0 * Math.sqrt(T / T0);
+};

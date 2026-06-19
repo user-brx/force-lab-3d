@@ -1,3 +1,4 @@
+import { soundSpeedAt } from "../constants";
 import { fmt } from "../format";
 import { L } from "../i18n";
 import { vec, type Vec3 } from "../math";
@@ -16,8 +17,10 @@ import type { Scenario, SceneView, ShockEmit, ForceArrow, Readout, Metric, Scene
 interface Bullet {
   x: number;
   y: number;
+  z: number;
   vx: number;
   vy: number;
+  vz: number;
   dist: number;   // distância percorrida (m)
   shockT: number; // acumulador para emitir ondas de choque
   hit: boolean;   // já interagiu com a barreira (não reprocessa)
@@ -52,6 +55,7 @@ interface RevolverState {
   barrierHit: BarrierHit | null; // último impacto numa barreira (para o HUD)
   focusAt: Vec3 | null; // a câmera trava neste ponto (impacto na barreira) por focusT
   focusT: number;       // tempo restante de foco na barreira (s de simulação)
+  eDrag: number;        // energia dissipada por arrasto no ar
 }
 
 // .50 BMG / Barrett M82A1 com projétil M33 Ball (661 gr ≈ 42 g a 890 m/s) - valores reais
@@ -176,6 +180,7 @@ export const revolver: Scenario<RevolverState> = {
     barrierHit: null,
     focusAt: null,
     focusT: 0,
+    eDrag: 0,
   }),
 
   step(s, env, params, c, dt) {
@@ -202,7 +207,7 @@ export const revolver: Scenario<RevolverState> = {
 
       // Nova bala (não apaga as anteriores): entra no fim da lista. A mais recente
       // é sempre a última do array e é a que a câmera Matrix segue.
-      s.bullets.push({ x: muzzle.x, y: muzzle.y, vx: vB * dx, vy: vB * dy, dist: 0, shockT: 0, hit: false, spent: false });
+      s.bullets.push({ x: muzzle.x, y: muzzle.y, z: 0, vx: vB * dx, vy: vB * dy, vz: 0, dist: 0, shockT: 0, hit: false, spent: false });
       if (s.bullets.length > MAX_BULLETS) s.bullets.shift(); // descarta a mais antiga
       if (c.matrixFire) s.matrixActive = true;
       s.tSinceFire = 0;
@@ -250,20 +255,34 @@ export const revolver: Scenario<RevolverState> = {
 
     // --- Projéteis .50 BMG (cada bala é independente) ---
     for (const b of s.bullets) {
-      const speed = Math.hypot(b.vx, b.vy);
+      const speed = Math.hypot(b.vx, b.vy, b.vz || 0);
 
       // Arrasto do ar: F = ½·ρ·v²·Cd·A. Cd varia com Mach (curva real do M33).
       if (env.airDensity > 0 && speed > 0) {
-        const cd = bulletCd(speed / env.soundSpeed);
+        const aSpeed = soundSpeedAt(b.y, env.soundSpeed);
+        const mach = aSpeed > 0 ? speed / aSpeed : 0;
+        const cd = bulletCd(mach);
         const dragAcc = (0.5 * env.airDensity * speed * speed * cd * BULLET_AREA) / mB;
         b.vx -= dragAcc * (b.vx / speed) * dt;
         b.vy -= dragAcc * (b.vy / speed) * dt;
+        b.vz -= dragAcc * ((b.vz || 0) / speed) * dt;
+        s.eDrag += (dragAcc * mB) * speed * dt;
       }
 
-      if (env.g > 0) b.vy -= env.g * dt;
+      if (env.g > 0) {
+        b.vy -= env.g * dt;
+        // Efeito Coriolis (aceleração lateral): a_cor = 2·ω·v·sin(lat)
+        // Aproximação: velocidade horizontal ~ b.vx, atirando p/ Norte, desvio p/ Leste
+        const omega = 7.2921e-5; // rad/s (Terra)
+        const lat = Math.PI / 4; // 45 graus
+        const aCor = 2 * omega * b.vx * Math.sin(lat);
+        b.vz = (b.vz || 0) + aCor * dt;
+      }
+
       const x0 = b.x;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
+      b.z = (b.z || 0) + (b.vz || 0) * dt;
       b.dist += speed * dt;
 
       // Impacto na barreira: a bala cruzou o plano x = D dentro da altura do alvo.
@@ -298,7 +317,8 @@ export const revolver: Scenario<RevolverState> = {
       }
 
       // Ondas de choque supersônicas.
-      const mach = speed / env.soundSpeed;
+      const aSpeed = soundSpeedAt(b.y, env.soundSpeed);
+      const mach = aSpeed > 0 ? speed / aSpeed : 0;
       if (mach > 1 && env.airDensity > 0) {
         b.shockT += dt;
         if (b.shockT >= 0.04) {
@@ -377,6 +397,7 @@ export const revolver: Scenario<RevolverState> = {
         { label: L("Velocidade do projétil", "Bullet speed"),      value: fmt(bSpeed, 1),        unit: "m/s", highlight: true },
         { label: L("Distância percorrida",   "Distance traveled"), value: fmt(newest.dist, 1),   unit: "m"   },
         { label: L("Altitude do projétil",   "Bullet altitude"),   value: fmt(newest.y, 2),      unit: "m"   },
+        { label: L("Desvio Coriolis",        "Coriolis deviation"),value: fmt((newest.z || 0) * 100, 1), unit: "cm", highlight: true },
         { label: L("Mach",                   "Mach"),              value: fmt(bMach, 2), unit: "" },
       );
       if (s.bullets.length > 1) readouts.push({ label: L("Balas no ar", "Bullets in flight"), value: fmt(s.bullets.length, 0), unit: "" });
@@ -393,7 +414,7 @@ export const revolver: Scenario<RevolverState> = {
       // quando há mais balas que slots de rótulo na cena.
       for (let i = s.bullets.length - 1; i >= 0; i--) {
         const b = s.bullets[i];
-        const sp = Math.hypot(b.vx, b.vy);
+        const sp = Math.hypot(b.vx, b.vy, b.vz || 0);
         labels.push({
           at: vec(b.x, b.y, 0),
           title: `${fmt(sp, 0)} m/s`,
@@ -435,6 +456,11 @@ export const revolver: Scenario<RevolverState> = {
       readouts,
       bars: [],
       metrics,
+      energies: [
+        { label: L("Cinética (Arma)", "Gun Kinetic"), value: keGun, color: "#e7c96a" },
+        { label: L("Cinética (Projéteis)", "Bullets Kinetic"), value: s.bullets.reduce((acc, b) => acc + 0.5 * mB * (b.vx * b.vx + b.vy * b.vy + (b.vz || 0) * (b.vz || 0)), 0), color: "#4d9fff" },
+        { label: L("Dissipada (Arrasto/Alvo)", "Dissipated"), value: s.eDrag + (s.barrierHit?.energyJ || 0), color: "#ff6b2b" },
+      ],
       labels,
       note: s.tSinceFire > 900
         ? L("Pressione DISPARAR para atirar. Matrix ativa câmera lenta.", "Press FIRE to shoot. Matrix enables slow-motion follow.")

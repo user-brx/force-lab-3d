@@ -107,6 +107,8 @@ export interface SceneView {
   labels?: SceneLabel[];
   /** Séries para o gráfico em tempo real (opcional). */
   metrics?: Metric[];
+  /** Energias rastreadas no sistema (Cinética, Potencial, Dissipada) (J) */
+  energies?: { label: string; value: number; color: string }[];
   /** Aviso contextual (ex.: "TWR < 1, não decola"). */
   note: string;
   /** Cartão "de onde vem a força". */

@@ -2,6 +2,7 @@ import { L } from "../physics";
 import { useStore } from "../state/store";
 import { FORCE_COLORS, forceLegend } from "./theme";
 import { Graph } from "./Graph";
+import { fmt } from "../physics/format";
 
 export function Hud() {
   const hud = useStore((s) => s.hud);
@@ -38,6 +39,36 @@ export function Hud() {
             </div>
           </div>
         ))}
+        {hud.energies && hud.energies.length > 0 && (
+          <div className="bar energies-bar">
+            <div className="row">
+              <span>{L("Energia (Total)", "Energy (Total)")}</span>
+              <span>{fmt(hud.energies.reduce((sum, e) => sum + e.value, 0) / 1000, 1)} kJ</span>
+            </div>
+            <div className="track stacked">
+              {hud.energies.map((e, i) => {
+                const total = Math.max(0.001, hud.energies!.reduce((s, ee) => s + ee.value, 0));
+                const pct = (e.value / total) * 100;
+                return (
+                  <div
+                    key={i}
+                    className="fill"
+                    style={{ width: `${pct}%`, background: e.color }}
+                    title={`${e.label}: ${fmt(e.value / 1000, 1)} kJ`}
+                  />
+                );
+              })}
+            </div>
+            <div className="energy-legend">
+              {hud.energies.map((e, i) => (
+                <div className="item" key={i}>
+                  <span className="dot" style={{ background: e.color }} />
+                  {e.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <Graph />

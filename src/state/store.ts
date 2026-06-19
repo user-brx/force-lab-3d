@@ -14,6 +14,7 @@ export interface HudData {
   bars: Bar[];
   note: string;
   source: string;
+  energies?: { label: string; value: number; color: string }[];
 }
 
 interface AppState {

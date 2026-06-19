@@ -11,7 +11,7 @@ import { skaters } from "../scenarios/skaters";
 import { emptyControls } from "../types";
 
 // Isp usado internamente pelo foguete (querosene/LOX). Mantido em sincronia com rocket.ts.
-const ISP_TEST = 280;
+const ISP_TEST = 311;
 
 // Todos os testes validam o núcleo contra a solução analítica de livro-texto.
 
@@ -59,7 +59,7 @@ describe("Patinadores - conservação de momento", () => {
 describe("Carro - tração limitada por atrito", () => {
   it("no gelo a roda patina e a tração cai ao atrito cinético", () => {
     const env = makeEnvironment("terra", "gelo");
-    const params = { massa: 1200, forca: 4500 };
+    const params = { massa: 1200, potencia: 150 };
     const s = car.init(env, params);
     for (let i = 0; i < 200; i++) car.step(s, env, params, emptyControls(), 0.016);
     expect(s.spinning).toBe(true);

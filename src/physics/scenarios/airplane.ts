@@ -1,4 +1,4 @@
-import { AIR_DENSITY_SL, airDensityAt } from "../constants";
+import { AIR_DENSITY_SL, airDensityAt, soundSpeedAt } from "../constants";
 import { auto, fmt } from "../format";
 import { L } from "../i18n";
 import { clamp, vec } from "../math";
@@ -24,6 +24,9 @@ interface PlaneState {
   throttle: number;
   propSpin: number;
   shockT: number;
+  prevMach: number;
+  eEngine: number;
+  eDrag: number;
   events: ShockEmit[];
 }
 
@@ -32,6 +35,21 @@ const CL_MAX = 1.5; // coeficiente de sustentação máximo
 const CD0 = 0.03; // arrasto parasita
 const K_IND = 0.045; // fator de arrasto induzido
 const MAX_CLIMB = 0.35; // rad (~20°)
+
+// Arrasto transônico ("muro do som"): pico gaussiano centrado em Mach ~1.05.
+// O coeficiente de arrasto de onda cresce abrupta­mente entre Mach 0.8 e 1.2,
+// multiplicando o arrasto total por ~3-4× perto de Mach 1. Valores derivados
+// de dados experimentais de aerofólios convencionais (NACA 64-series).
+const CD_WAVE_PEAK = 0.12; // ~4× CD0 no pico
+const CD_WAVE_CENTER = 1.05; // Mach do pico
+const CD_WAVE_SIGMA = 0.12; // largura da barreira
+
+/** Arrasto de onda transônico: 0 longe de Mach 1, pico ~0.12 em Mach 1.05. */
+export function waveDragCd(mach: number): number {
+  if (mach < 0.6) return 0;
+  const dm = mach - CD_WAVE_CENTER;
+  return CD_WAVE_PEAK * Math.exp(-(dm * dm) / (2 * CD_WAVE_SIGMA * CD_WAVE_SIGMA));
+}
 
 export const airplane: Scenario<PlaneState> = {
   id: "aviao",
@@ -60,6 +78,9 @@ export const airplane: Scenario<PlaneState> = {
     throttle: 0,
     propSpin: 0,
     shockT: 0,
+    prevMach: 0,
+    eEngine: 0,
+    eDrag: 0,
     events: [],
   }),
 
@@ -86,12 +107,23 @@ export const airplane: Scenario<PlaneState> = {
     }
     s.T = T;
 
-    // Pressão dinâmica e arrasto.
+    // Pressão dinâmica e arrasto (agora com wave drag transônico).
     const q = 0.5 * rho * s.v * s.v;
+    const aSpeed = soundSpeedAt(s.y, env.soundSpeed);
+    const mach = aSpeed > 0 ? s.v / aSpeed : 0;
     const clOp = q > 1 ? clamp(W / (q * WING_AREA), 0, CL_MAX) : CL_MAX;
-    const cd = CD0 + K_IND * clOp * clOp;
+    const cdWave = waveDragCd(mach);
+    const cd = CD0 + K_IND * clOp * clOp + cdWave;
     const D = q * WING_AREA * cd;
     s.D = D;
+
+    // Estouro do som (sonic boom) ao cruzar Mach 1.
+    if (env.airDensity > 0.05 && env.soundSpeed > 0) {
+      if (s.prevMach < 1 && mach >= 1) {
+        s.events.push({ at: vec(s.x, 1 + s.y, 0), kind: "blast", color: "#cfe3ff", maxRadius: 8, life: 0.7 });
+      }
+      s.prevMach = mach;
+    }
 
     // Sustentação máxima disponível agora.
     const liftMax = q * WING_AREA * CL_MAX;
@@ -132,6 +164,9 @@ export const airplane: Scenario<PlaneState> = {
         if (s.v < 1) s.airborne = false;
       }
     }
+
+    s.eEngine += T * s.v * dt;
+    s.eDrag += s.D * s.v * dt;
   },
 
   view(s, env, params): SceneView {
@@ -183,6 +218,10 @@ export const airplane: Scenario<PlaneState> = {
       { kind: "weight" as const, label: "PESO", origin: body, dir: vec(0, -1, 0), magnitude: W },
     ];
 
+    const aSpeed = soundSpeedAt(s.y, env.soundSpeed);
+    const mach = aSpeed > 0 ? s.v / aSpeed : 0;
+    const transonic = mach > 0.8 && mach < 1.3;
+
     let note: string;
     if (noAir)
       note = L(
@@ -191,6 +230,13 @@ export const airplane: Scenario<PlaneState> = {
       );
     else if (!s.airborne)
       note = L("Acelerando na pista. Ao atingir a velocidade de decolagem, as asas geram sustentação ≥ peso e ele sobe.", "Accelerating down the runway. At takeoff speed the wings make lift ≥ weight and it climbs.");
+    else if (transonic)
+      note = L(
+        "Barreira do som: o arrasto transônico dispara perto de Mach 1. É preciso empuxo muito maior para cruzar.",
+        "Sound barrier: transonic drag spikes near Mach 1. Much more thrust is needed to break through.",
+      );
+    else if (mach >= 1.3)
+      note = L("Voo supersônico: passou a barreira do som. O arrasto de onda cai após Mach ~1.2.", "Supersonic flight: past the sound barrier. Wave drag drops after Mach ~1.2.");
     else if (s.climb > 0.02)
       note = L("Subindo: há empuxo sobrando além do arrasto.", "Climbing: there's thrust to spare beyond drag.");
     else if (s.climb < -0.02)
@@ -210,12 +256,19 @@ export const airplane: Scenario<PlaneState> = {
         { label: L("Arrasto", "Drag"), value: fmt(s.D / 1000, 1), unit: "kN" },
         { label: L("Peso", "Weight"), value: fmt(W / 1000, 1), unit: "kN" },
         { label: L("Ângulo de subida", "Climb angle"), value: fmt((s.climb * 180) / Math.PI, 0), unit: "°" },
+        ...(env.soundSpeed > 0 ? [{ label: "Mach", value: fmt(mach, 2), unit: "", highlight: transonic }] : []),
         { label: L("Motor", "Engine"), value: jet ? L("Jato", "Jet") : L("Hélice", "Propeller") },
       ],
       bars: [],
       metrics: [
         { label: L("Velocidade", "Speed"), value: s.v, unit: "m/s", color: "#4D9FFF" },
         { label: L("Altitude", "Altitude"), value: s.y, unit: "m", color: "#F5B83D" },
+      ],
+      energies: [
+        { label: L("Trabalho Motor", "Engine Work"), value: s.eEngine, color: "#e7c96a" },
+        { label: L("Cinética", "Kinetic"), value: 0.5 * m * s.v * s.v, color: "#4d9fff" },
+        { label: L("Potencial", "Potential"), value: env.g > 0 ? m * env.g * s.y : 0, color: "#e7c96a" },
+        { label: L("Dissipada", "Dissipated"), value: s.eDrag, color: "#ff6b2b" },
       ],
       note,
       source: L(

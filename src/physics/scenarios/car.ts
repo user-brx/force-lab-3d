@@ -16,6 +16,9 @@ interface CarState {
   spinning: boolean;
   throttle: number;
   shockT: number;
+  eMotor: number;
+  eDrag: number;
+  eRolling: number;
   events: ShockEmit[];
 }
 
@@ -34,7 +37,7 @@ export const car: Scenario<CarState> = {
   defaultPlanet: "terra",
   params: {
     massa: { label: "Massa", labelEn: "Mass", min: 700, max: 2500, step: 50, default: 1200, unit: "kg" },
-    forca: { label: "Força do motor", labelEn: "Engine force", min: 1000, max: 9000, step: 100, default: 4500, unit: "N" },
+    potencia: { label: "Potência", labelEn: "Power", min: 50, max: 500, step: 10, default: 150, unit: "kW" },
   },
 
   init: () => ({
@@ -46,12 +49,17 @@ export const car: Scenario<CarState> = {
     spinning: false,
     throttle: 0,
     shockT: 0,
+    eMotor: 0,
+    eDrag: 0,
+    eRolling: 0,
     events: [],
   }),
 
   step(s, env, params, _c, dt) {
     const m = params.massa ?? 1200;
-    const fMax = params.forca ?? 4500;
+    const power = (params.potencia ?? 150) * 1000; // W
+    const vMin = 4; // m/s
+    const fMax = power / Math.max(vMin, s.v);
     const N = m * env.g;
 
     s.throttle = Math.min(1, s.throttle + dt * 0.7);
@@ -68,6 +76,10 @@ export const car: Scenario<CarState> = {
 
     s.fDrag = 0.5 * env.airDensity * CD * FRONTAL_AREA * s.v * s.v;
     const fRoll = s.v > 0.01 ? CRR * N : 0;
+
+    s.eMotor += s.fTraction * s.v * dt;
+    s.eDrag += s.fDrag * s.v * dt;
+    s.eRolling += fRoll * s.v * dt;
 
     const net = s.fTraction - s.fDrag - fRoll;
     const a = net / m;
@@ -128,13 +140,19 @@ export const car: Scenario<CarState> = {
       readouts: [
         { label: L("Velocidade", "Speed"), value: fmt(s.v * 3.6, 0), unit: "km/h" },
         { label: L("Velocidade", "Speed"), value: fmt(s.v, 1), unit: "m/s" },
-        { label: L("Força do motor", "Engine force"), value: fmt(s.fEngineReq, 0), unit: "N" },
+        { label: L("Potência", "Power"), value: fmt(params.potencia ?? 150, 0), unit: "kW" },
+        { label: L("Força disp.", "Avail. force"), value: fmt(s.fEngineReq, 0), unit: "N" },
         { label: L("Força de tração", "Traction force"), value: fmt(s.fTraction, 0), unit: "N", highlight: true },
         { label: L("Arrasto do ar", "Air drag"), value: fmt(s.fDrag, 0), unit: "N" },
         { label: L("Aceleração", "Acceleration"), value: fmt(a, 2), unit: "m/s²" },
       ],
       bars: [],
       metrics: [{ label: L("Velocidade", "Speed"), value: s.v, unit: "m/s", color: "#4D9FFF" }],
+      energies: [
+        { label: L("Trabalho do Motor", "Motor Work"), value: s.eMotor, color: "#e7c96a" },
+        { label: L("Cinética", "Kinetic"), value: 0.5 * m * s.v * s.v, color: "#4d9fff" },
+        { label: L("Dissipada (Atrito/Ar)", "Dissipated"), value: s.eDrag + s.eRolling, color: "#ff6b2b" },
+      ],
       note:
         env.g <= 0
           ? L("Sem gravidade não há atrito: a roda gira sem empurrar nada.", "No gravity, no friction: the wheel spins without pushing anything.")

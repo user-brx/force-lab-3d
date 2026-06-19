@@ -1,4 +1,4 @@
-import { AIR_DENSITY_SL, G0, KARMAN_LINE, airDensityAt, gravityAt } from "../constants";
+import { AIR_DENSITY_SL, G0, KARMAN_LINE, airDensityAt, gravityAt, soundSpeedAt } from "../constants";
 import { auto, fmt } from "../format";
 import { L } from "../i18n";
 import { clamp, vec } from "../math";
@@ -24,10 +24,12 @@ interface RocketState {
   exploded: boolean;
   shockT: number;
   prevMach: number;
+  eDrag: number;
   events: ShockEmit[];
 }
 
-const ISP = 280; // impulso específico (s), típico de querosene/LOX
+const ISP_VAC = 311; // impulso específico no vácuo (s), ex: Merlin 1D
+const ISP_SL = 260; // impulso específico no nível do mar (s)
 const LENGTH = 8; // comprimento do foguete (m) - usado para inércia/braço
 const DRAG_CD = 0.5;
 const DRAG_AREA = 1.0; // m²
@@ -65,6 +67,7 @@ export const rocket: Scenario<RocketState> = {
       exploded: false,
       shockT: 0,
       prevMach: 0,
+      eDrag: 0,
       events: [],
     };
   },
@@ -72,8 +75,14 @@ export const rocket: Scenario<RocketState> = {
   step(s, env, params, c, dt) {
     if (s.exploded) return;
 
-    const thrust = (params.empuxo ?? 30) * 1000;
-    const mdot = thrust / (ISP * G0);
+    const rho = env.airDensity > 0 ? airDensityAt(s.y, env.airDensity, env.scaleHeight) : 0;
+    const rhoRatio = env.airDensity > 0 ? rho / AIR_DENSITY_SL : 0;
+    const ispEff = ISP_VAC - (ISP_VAC - ISP_SL) * rhoRatio;
+
+    const nominalThrust = (params.empuxo ?? 30) * 1000;
+    const mdot = nominalThrust / (ISP_SL * G0); // Fluxo de massa é constante
+    const thrust = mdot * ispEff * G0;
+
     const mass = s.mDry + s.mProp;
     const firing = s.mProp > 0;
 
@@ -104,6 +113,7 @@ export const rocket: Scenario<RocketState> = {
       const drag = 0.5 * rho * DRAG_CD * DRAG_AREA * speed * speed;
       fx -= drag * (s.vx / speed);
       fy -= drag * (s.vy / speed);
+      s.eDrag += drag * speed * dt;
     }
 
     // Amortecimento aerodinâmico da rotação: existe só na atmosfera.
@@ -165,12 +175,17 @@ export const rocket: Scenario<RocketState> = {
   },
 
   view(s, env, params): SceneView {
-    const thrust = (params.empuxo ?? 30) * 1000;
+    const rhoRatioView = env.airDensity > 0 ? airDensityAt(s.y, env.airDensity, env.scaleHeight) / AIR_DENSITY_SL : 0;
+    const ispView = ISP_VAC - (ISP_VAC - ISP_SL) * rhoRatioView;
+    const nominalThrust = (params.empuxo ?? 30) * 1000;
+    const thrust = (nominalThrust / (ISP_SL * G0)) * ispView * G0;
+
     const mass = s.mDry + s.mProp;
     const firing = s.mProp > 0 && !s.exploded;
     const g = gravityAt(s.y, env.g, env.radius);
     const twr = env.g > 0 ? thrust / (mass * g) : Infinity;
     const speed = Math.hypot(s.vx, s.vy);
+    const dv = ispView * G0 * Math.log((s.mDry + s.mProp) / s.mDry);
 
     const axis = vec(Math.sin(s.phi), Math.cos(s.phi), 0);
     const base = vec(s.x, s.y, 0);
@@ -179,8 +194,6 @@ export const rocket: Scenario<RocketState> = {
 
     const grounded = s.y <= 0.01;
     const cantLift = env.g > 0 && twr <= 1;
-    const vExhaust = ISP * G0; // velocidade efetiva de exaustão (m/s)
-    const dv = s.mProp > 0 ? vExhaust * Math.log((s.mDry + s.mProp) / s.mDry) : 0;
     const shocks = s.events;
     s.events = [];
 
@@ -233,11 +246,12 @@ export const rocket: Scenario<RocketState> = {
         unit: "",
         highlight: true,
       },
-      { label: L("Veloc. de exaustão", "Exhaust velocity"), value: fmt(vExhaust, 0), unit: "m/s" },
+      { label: L("Veloc. de exaustão", "Exhaust velocity"), value: fmt(ispView * G0, 0), unit: "m/s" },
       { label: L("Δv restante (Tsiolkovsky)", "Remaining Δv (Tsiolkovsky)"), value: fmt(dv, 0), unit: "m/s", highlight: true },
     ];
     if (env.airDensity > 0) {
-      readouts.push({ label: "Mach", value: fmt(speed / env.soundSpeed, 2), unit: "" });
+      const sndSpeed = soundSpeedAt(s.y, env.soundSpeed);
+      readouts.push({ label: "Mach", value: fmt(speed / sndSpeed, 2), unit: "" });
       readouts.push({
         label: L("Densidade do ar", "Air density"),
         value: auto(airDensityAt(s.y, env.airDensity, env.scaleHeight), 2),
@@ -280,6 +294,11 @@ export const rocket: Scenario<RocketState> = {
       metrics: [
         { label: L("Velocidade", "Speed"), value: speed, unit: "m/s", color: "#4D9FFF" },
         { label: L("Altitude", "Altitude"), value: s.y / 1000, unit: "km", color: "#F5B83D" },
+      ],
+      energies: [
+        { label: L("Cinética", "Kinetic"), value: 0.5 * mass * speed * speed, color: "#4d9fff" },
+        { label: L("Potencial", "Potential"), value: env.g > 0 ? mass * env.g * env.radius * (s.y / (env.radius + s.y)) : 0, color: "#e7c96a" },
+        { label: L("Dissipada", "Dissipated"), value: s.eDrag, color: "#ff6b2b" },
       ],
       note,
       source: L(

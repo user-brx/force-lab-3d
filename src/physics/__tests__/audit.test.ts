@@ -6,11 +6,11 @@
  * dados balísticos militares, manuais de aeronaves leves).
  */
 import { describe, expect, it } from "vitest";
-import { G0, gravityAt, airDensityAt, EARTH_RADIUS, EARTH_MASS, G_UNIVERSAL } from "../constants";
+import { G0, gravityAt, airDensityAt, EARTH_RADIUS, EARTH_MASS, G_UNIVERSAL, soundSpeedAt } from "../constants";
 import { makeEnvironment, PLANETS } from "../environments";
 import { person } from "../scenarios/person";
 import { car } from "../scenarios/car";
-import { airplane } from "../scenarios/airplane";
+import { airplane, waveDragCd } from "../scenarios/airplane";
 import { rocket } from "../scenarios/rocket";
 import { revolver, BARRIER_MATERIALS, penetrationDepth, residualVel } from "../scenarios/revolver";
 import { skaters } from "../scenarios/skaters";
@@ -122,6 +122,19 @@ describe("Densidade do ar vs. modelo ISA / valores reais", () => {
   });
 });
 
+describe("Velocidade do som vs. modelo ISA", () => {
+  it("A 11 km (tropopausa): a ≈ 295 m/s (ISA: 295.1 m/s)", () => {
+    const a11k = soundSpeedAt(11_000, 340.3);
+    expect(a11k).toBeCloseTo(295, 0);
+  });
+
+  it("Acima de 11 km a temperatura/velocidade do som estabiliza no modelo simplificado", () => {
+    const a11k = soundSpeedAt(11_000, 340.3);
+    const a20k = soundSpeedAt(20_000, 340.3);
+    expect(a20k).toBe(a11k);
+  });
+});
+
 // =====================================================================
 // 4. SUPERFÍCIES - atrito
 // =====================================================================
@@ -193,15 +206,14 @@ describe("Pessoa - simulação vs. realidade", () => {
 // 6. CARRO - velocidade máxima e arrasto
 // =====================================================================
 describe("Carro - arrasto e velocidade terminal", () => {
-  it("Velocidade máxima (tração = arrasto): estimativa realista 140-220 km/h", () => {
+  it("Velocidade máxima (tração = arrasto) usando curva de potência (150 kW)", () => {
     const env = makeEnvironment("terra", "asfalto");
-    const params = { massa: 1200, forca: 4500 };
+    const params = { massa: 1200, potencia: 150 };
     const s = run(car, env, params, 30000, 1/240);
     const vKmh = s.v * 3.6;
-    // V_max = sqrt(2·F / (ρ·Cd·A)) ≈ sqrt(2·4500 / (1.225·0.3·2.2)) ≈ 104 m/s ≈ 375 km/h
-    // Mas com rolling resistance e throttle ramp a final é menor
-    expect(vKmh).toBeGreaterThan(100);
-    expect(vKmh).toBeLessThan(400);
+    // V_max ≈ cbrt(2P / (ρ·Cd·A)) ≈ cbrt(2*150000 / (1.225*0.3*2.2)) ≈ cbrt(300000 / 0.8085) ≈ 71.8 m/s ≈ 258 km/h
+    expect(vKmh).toBeGreaterThan(200);
+    expect(vKmh).toBeLessThan(300);
   });
 
   it("Arrasto a 100 km/h (27.78 m/s) ≈ ½·1.225·0.3·2.2·27.78² ≈ 312 N (ref: 300-350 N)", () => {
@@ -213,7 +225,7 @@ describe("Carro - arrasto e velocidade terminal", () => {
 
   it("No gelo a tração máxima cai para μk·N ≈ 0.03·1200·9.81 ≈ 353 N", () => {
     const env = makeEnvironment("terra", "gelo");
-    const params = { massa: 1200, forca: 4500 };
+    const params = { massa: 1200, potencia: 150 };
     const s = run(car, env, params, 1000, 1/240);
     expect(s.spinning).toBe(true);
     const expected = 0.03 * 1200 * G0;
@@ -267,24 +279,33 @@ describe("Avião - velocidade de decolagem e voo", () => {
     const vStallVenus = Math.sqrt(2 * 3000 * envVenus.g / (envVenus.airDensity * 30 * 1.5));
     expect(vStallVenus).toBeLessThan(vStallTerra);
   });
+
+  it("Arrasto transônico (wave drag) dispara perto de Mach 1", () => {
+    expect(waveDragCd(0.5)).toBeCloseTo(0);
+    expect(waveDragCd(0.7)).toBeLessThan(0.01);
+    const peak = waveDragCd(1.05);
+    expect(peak).toBeCloseTo(0.12);
+    const mach2 = waveDragCd(2.0);
+    expect(mach2).toBeLessThan(peak);
+  });
 });
 
 // =====================================================================
 // 8. FOGUETE - Tsiolkovsky, TWR, gravidade altitude
 // =====================================================================
 describe("Foguete - equação de Tsiolkovsky e dados reais", () => {
-  it("Isp = 280 s → v_exaustão = 280 × 9.80665 = 2745.9 m/s (Merlin 1D: 282 s, OK)", () => {
-    const vExhaust = 280 * G0;
-    expect(vExhaust).toBeCloseTo(2745.9, 0);
+  it("Isp_vac = 311 s → v_exaustão = 311 × 9.80665 ≈ 3050 m/s no vácuo (Merlin 1D Vac: 311 s, OK)", () => {
+    const vExhaust = 311 * G0;
+    expect(vExhaust).toBeCloseTo(3049.8, 0);
   });
 
-  it("Δv no vácuo bate com Tsiolkovsky (erro < 3%)", () => {
+  it("Δv no vácuo bate com Tsiolkovsky usando Isp_vac=311s (erro < 3%)", () => {
     const env = makeEnvironment("vacuo", "asfalto");
     const params = { empuxo: 30, massaSeca: 500, combustivel: 100 };
     const s = rocket.init(env, params);
     const m0 = s.mDry + s.mProp0;
     const mf = s.mDry;
-    const dvAnalytic = 280 * G0 * Math.log(m0 / mf);
+    const dvAnalytic = 311 * G0 * Math.log(m0 / mf);
 
     let guard = 0;
     while (s.mProp > 0 && guard < 200000) {
@@ -295,7 +316,7 @@ describe("Foguete - equação de Tsiolkovsky e dados reais", () => {
     expect(Math.abs(speed - dvAnalytic) / dvAnalytic).toBeLessThan(0.03);
   });
 
-  it("TWR < 1 na Terra: foguete NÃO sai do chão", () => {
+  it("TWR < 1 na Terra: foguete NÃO sai do chão (empuxo é menor ao nível do mar)", () => {
     const env = makeEnvironment("terra", "asfalto");
     const params = { empuxo: 5, massaSeca: 2000, combustivel: 100 };
     const s = run(rocket, env, params, 500, 1/60);
@@ -406,7 +427,7 @@ describe("Fuzil .50 BMG - balística real", () => {
     expect(vr10cm).toBe(0);
   });
 
-  it("No vácuo, bala mantém velocidade (sem arrasto nem gravidade)", () => {
+  it("No vácuo, bala mantém velocidade (sem arrasto nem gravidade) e Coriolis é 0", () => {
     const env = makeEnvironment("vacuo", "asfalto");
     const params = { massaBala: 42, velBala: 890, massaArma: 14, barreira: 0 };
     const s = revolver.init(env, params);
@@ -414,6 +435,33 @@ describe("Fuzil .50 BMG - balística real", () => {
     for (let i = 0; i < 1000; i++) revolver.step(s, env, params, emptyControls(), 0.01);
     const speed = Math.hypot(s.bullets[0].vx, s.bullets[0].vy);
     expect(speed).toBeCloseTo(890, 0);
+    expect(s.bullets[0].z).toBeCloseTo(0, 5); // Sem gravidade = sem Coriolis no nosso modelo
+  });
+
+  it("Efeito Coriolis desvia a bala lateralmente na Terra (~7 cm a 1 km)", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { massaBala: 42, velBala: 890, massaArma: 14, barreira: 0 };
+    const s = revolver.init(env, params);
+    
+    // Atirar para cima para a bala não cair no chão antes de 2 km
+    s.gunAngle = 0.2; 
+    revolver.step(s, env, params, { ...emptyControls(), fire: true }, 0.001);
+    
+    // Avançar até a bala chegar a ~1000 m de distância horizontal (ou percorrida)
+    while (s.bullets[0].dist < 1000) {
+      revolver.step(s, env, params, emptyControls(), 0.016);
+    }
+    const desvio1km = s.bullets[0].z * 100; // cm
+    expect(desvio1km).toBeGreaterThan(4);
+    expect(desvio1km).toBeLessThan(12);
+
+    // Avançar até ~2000 m
+    while (s.bullets[0].dist < 2000) {
+      revolver.step(s, env, params, emptyControls(), 0.016);
+    }
+    const desvio2km = s.bullets[0].z * 100; // cm
+    expect(desvio2km).toBeGreaterThan(15);
+    expect(desvio2km).toBeLessThan(40);
   });
 });
 
@@ -506,3 +554,68 @@ describe("Integração numérica - estabilidade e precisão", () => {
     expect(Number.isFinite(s.y)).toBe(true);
   });
 });
+
+// =====================================================================
+// 13. CONSERVAÇÃO DE ENERGIA (Item 8)
+// =====================================================================
+describe("Conservação de Energia", () => {
+  it("Patinadores no vácuo: trabalho do empurrão = energia cinética adquirida", () => {
+    const env = makeEnvironment("vacuo", "asfalto");
+    const params = { massaA: 60, massaB: 90, forca: 300 };
+    const s = skaters.init(env, params);
+    const dt = 0.01;
+    
+    let work = 0;
+    skaters.step(s, env, params, { ...emptyControls(), fire: true }, dt);
+    for (let i = 0; i < 100; i++) {
+      const vRel = Math.abs(s.v1) + Math.abs(s.v2);
+      if (s.F > 0) work += s.F * vRel * dt;
+      skaters.step(s, env, params, emptyControls(), dt);
+    }
+    
+    const ec1 = 0.5 * 60 * s.v1 * s.v1;
+    const ec2 = 0.5 * 90 * s.v2 * s.v2;
+    // O erro vem da integração de Euler, deve ser próximo a ~200 J
+    expect(Math.abs((ec1 + ec2) - work) / work).toBeLessThan(0.05);
+  });
+
+  it("Carro: Trabalho da tração = Ec + E_dissipada (arrasto + rolamento)", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { massa: 1200, potencia: 150 };
+    const s = car.init(env, params);
+    const dt = 0.01;
+    
+    const controls = { ...emptyControls(), up: true };
+    for (let i = 0; i < 200; i++) {
+      car.step(s, env, params, controls, dt);
+    }
+    
+    const ec = 0.5 * 1200 * s.v * s.v;
+    const eDiss = s.eDrag + s.eRolling;
+    
+    // O erro na integração de Euler significa que não é exato a 0 casas,
+    // mas deve estar a ~1-2% de erro.
+    const diff = Math.abs(s.eMotor - (ec + eDiss));
+    expect(diff / s.eMotor).toBeLessThan(0.05); // Menos de 5% de erro
+  });
+
+  it("Avião: Trabalho do motor = Ec + Ep + E_dissipada (arrasto)", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { massa: 3000, jato: 1, empuxo: 10 };
+    const s = airplane.init(env, params);
+    const dt = 0.01;
+    
+    const controls = { ...emptyControls(), up: true };
+    for (let i = 0; i < 300; i++) {
+      airplane.step(s, env, params, controls, dt);
+    }
+    
+    const ec = 0.5 * 3000 * s.v * s.v;
+    const ep = 3000 * gravityAt(s.y, env.g, env.radius) * s.y;
+    
+    const totalEnergy = ec + ep + s.eDrag;
+    const diff = Math.abs(s.eEngine - totalEnergy);
+    expect(diff / (s.eEngine + 1)).toBeLessThan(0.1); // Pode ter erro de integração
+  });
+});
+
