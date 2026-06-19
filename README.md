@@ -75,7 +75,7 @@ a câmera; role/pince para zoom.
 ## Física: auditoria e equações reais
 
 Princípio do projeto: **nunca inventar**. Cada cenário é derivado de equações de
-livro-texto com constantes reais e validado por **47 testes** (`npx vitest run`) contra a
+livro-texto com constantes reais e validado por **117 testes** (`npx vitest run`) contra a
 solução analítica. Esta seção documenta exatamente qual física cada cenário usa.
 
 ### Constantes reais
@@ -127,11 +127,17 @@ astro**. Densidade do ar na altitude: `ρ(h) = ρ₀·e^(−h/H)` (modelo isoté
 
 ### Validação automatizada (`src/physics/__tests__`)
 
-47 testes provam, entre outros: a aceleração do astro = F/M (3ª lei), atrito estático vs
-cinético, conservação de momento (patinadores e revólver), tração limitada por atrito,
-equação de Tsiolkovsky, TWR ≤ 1 não decola, decolagem mais fácil na Lua, avião não voa no
-vácuo, gravidade em altitude com o raio do astro, e um *smoke test* que roda **todos os
-cenários × todos os planetas** sem gerar NaN/Infinito.
+**117 testes** (`npx vitest run`) provam, entre outros: a aceleração do astro = F/M (3ª lei),
+atrito estático vs cinético, conservação de momento (patinadores e revólver), tração limitada
+por atrito, equação de Tsiolkovsky, TWR ≤ 1 não decola, decolagem mais fácil na Lua, avião
+não voa no vácuo, gravidade em altitude com o raio do astro, e um *smoke test* que roda
+**todos os cenários × todos os planetas** sem gerar NaN/Infinito. Os 64 testes de auditoria
+(`audit.test.ts`) comparam cada fórmula e cenário com valores reais de referência (NASA,
+CODATA, dados balísticos militares, ISA).
+
+> 📄 **[Relatório de Auditoria de Realismo Físico](doc/relatorio_auditoria_fisica.md)** -
+> análise detalhada de cada arquivo, cada fórmula e cada cenário contra dados reais, com
+> tabelas comparativas e veredicto por módulo.
 
 ### Simplificações conhecidas (honestas - efeitos reais omitidos, não invenções)
 
