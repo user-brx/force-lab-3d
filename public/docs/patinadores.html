@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patinadores · Guia do Professor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">← Índice</a> · <a class="back" href="../">Simulador</a></p>
+      <h1>⛸️ Patinadores</h1>
+      <p class="sub">Conservação do momento linear e a relação entre força, massa e aceleração.</p>
+    </header>
+
+    <h2>O conceito</h2>
+    <p>Dois patinadores se empurram. A força é <strong>idêntica</strong> nos dois (3ª lei), mas como a = F/m, o mais leve
+      sai mais rápido. Num sistema isolado (sem atrito), o <strong>momento total se conserva</strong> e permanece zero: os dois
+      momentos são iguais e opostos. Com atrito (força externa), o momento total deixa de se conservar e ambos param.</p>
+
+    <h2>As fórmulas</h2>
+    <div class="formula">
+      F<sub>A→B</sub> = − F<sub>B→A</sub> &nbsp;&nbsp;⇒&nbsp;&nbsp; m<sub>A</sub>·v<sub>A</sub> + m<sub>B</sub>·v<sub>B</sub> = 0
+      <span class="where">Mesma força e mesmo tempo ⇒ impulsos opostos ⇒ momentos opostos que somam zero.</span>
+    </div>
+    <div class="formula">
+      v<sub>A</sub> / v<sub>B</sub> = m<sub>B</sub> / m<sub>A</sub>
+      <span class="where">As velocidades ficam na razão inversa das massas: o leve dispara, o pesado mal anda.</span>
+    </div>
+    <div class="formula">
+      Impulso: J = F·Δt = Δp
+      <span class="where">A mesma força aplicada pelo mesmo tempo dá o mesmo módulo de momento a cada um.</span>
+    </div>
+
+    <h2 id="ex">Exemplo resolvido</h2>
+    <div class="card example">
+      <p><strong>Empurrão de 300 N por 0,4 s</strong> entre azul (60 kg) e vermelho (90 kg):</p>
+      <p>Impulso = F·Δt = 300·0,4 = <strong>120 N·s</strong> em cada um.</p>
+      <p>v<sub>azul</sub> = 120/60 = <strong>2,0 m/s</strong>; v<sub>vermelho</sub> = 120/90 = <strong>1,33 m/s</strong>.</p>
+      <p>Momento total = 60·2,0 − 90·1,33 = 120 − 120 = <strong>0</strong> ✓ (conservado, no vácuo/gelo sem atrito).</p>
+    </div>
+
+    <div class="note">No simulador, no gelo/vácuo o momento total permanece zero "para sempre"; no asfalto o atrito (força
+      externa) freia os dois e o total deixa de ser zero - ótima oportunidade para discutir o que é um <em>sistema isolado</em>.</div>
+
+    <h2>Referências</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentos de Física, vol. 1</em> - Cap. 9 (Centro de massa e momento linear; conservação).</li>
+      <li>YOUNG, FREEDMAN. <em>Física I (Sears & Zemansky)</em> - Cap. 8 (Momento linear, impulso e colisões).</li>
+      <li>TIPLER, MOSCA. <em>Física para Cientistas e Engenheiros, vol. 1</em> - Cap. 8.</li>
+    </ul>
+    <footer>A conservação do momento decorre diretamente da 3ª lei de Newton para um sistema isolado.</footer>
+  </div>
+</body>
+</html>

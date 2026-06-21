@@ -309,22 +309,23 @@ export const rocket: Scenario<RocketState> = {
       ),
       particles: firing
         ? [
+            // Jato central rápido (gás expelido para BAIXO - empurra o foguete para cima).
             {
               at: base,
               dir: nozzleDir,
               // No vácuo o jato se expande mais (sem contrapressão do ar).
-              speed: env.airDensity <= 0.01 ? 50 : 32,
-              spread: (env.airDensity <= 0.01 ? 0.5 : 0.12) + Math.abs(s.gimbal) * 2,
-              count: env.airDensity <= 0.01 ? 18 : 10,
+              speed: env.airDensity <= 0.01 ? 64 : 40,
+              spread: (env.airDensity <= 0.01 ? 0.45 : 0.1) + Math.abs(s.gimbal) * 2,
+              count: env.airDensity <= 0.01 ? 30 : 16,
               kind: "exhaust",
             },
-            // Fumaça/plume mais lento dá volume ao jato (bem aberto no vácuo).
+            // Plume mais lento e largo dá volume ao gás (bem aberto no vácuo).
             {
               at: base,
               dir: nozzleDir,
-              speed: env.airDensity <= 0.01 ? 26 : 16,
-              spread: (env.airDensity <= 0.01 ? 0.8 : 0.22) + Math.abs(s.gimbal) * 2,
-              count: env.airDensity <= 0.01 ? 12 : 6,
+              speed: env.airDensity <= 0.01 ? 34 : 20,
+              spread: (env.airDensity <= 0.01 ? 0.9 : 0.25) + Math.abs(s.gimbal) * 2,
+              count: env.airDensity <= 0.01 ? 18 : 8,
               kind: "smoke",
             },
           ]

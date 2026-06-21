@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guia do Professor · Laboratório de Forças 3D</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="../">← Voltar ao simulador</a></p>
+      <h1>Guia do Professor</h1>
+      <p class="sub">Laboratório de Forças 3D - material de apoio para aulas de Física (Ensino Médio e introdução ao superior).</p>
+    </header>
+
+    <p>Cada cenário do simulador demonstra um princípio da mecânica com <strong>física real</strong> - nada de números inventados.
+      As páginas abaixo explicam, no nível de sala de aula, <strong>de onde vem cada fórmula</strong>, quais <strong>valores reais</strong>
+      o programa usa e trazem um <strong>exemplo resolvido</strong> e <strong>referências de livros</strong>.</p>
+
+    <div class="note">
+      Sugestão de uso: projete o simulador, ajuste um parâmetro por vez e peça aos alunos para preverem o resultado
+      antes de soltar/atirar. Depois confronte a previsão com o HUD (velocidade, forças, energia). As fórmulas desta
+      página permitem conferir os números à mão.
+    </div>
+
+    <h2>Cenários</h2>
+    <div class="grid">
+      <a class="tile" href="pessoa.html"><div class="ico">🚶</div><div class="t">Pessoa caminhando</div><div class="d">2ª e 3ª leis de Newton, atrito estático</div></a>
+      <a class="tile" href="carro.html"><div class="ico">🚗</div><div class="t">Carro</div><div class="d">Tração por atrito, potência P=F·v, arrasto</div></a>
+      <a class="tile" href="aviao.html"><div class="ico">✈️</div><div class="t">Avião</div><div class="d">Sustentação, arrasto, barreira do som</div></a>
+      <a class="tile" href="foguete.html"><div class="ico">🚀</div><div class="t">Foguete</div><div class="d">Empuxo, Tsiolkovsky, TWR, Isp</div></a>
+      <a class="tile" href="fuzil.html"><div class="ico">🎯</div><div class="t">Fuzil .50</div><div class="d">Momento, recuo, balística, penetração</div></a>
+      <a class="tile" href="patinadores.html"><div class="ico">⛸️</div><div class="t">Patinadores</div><div class="d">Conservação do momento linear</div></a>
+      <a class="tile" href="queda.html"><div class="ico">☄️</div><div class="t">Queda / Energia</div><div class="d">Energia potencial e cinética, impacto</div></a>
+    </div>
+
+    <h2>Constantes e modelos usados em todo o app</h2>
+    <table>
+      <tr><th>Grandeza</th><th>Valor</th><th>Fonte</th></tr>
+      <tr><td>Gravidade padrão g₀</td><td>9,80665 m/s²</td><td>CODATA / BIPM</td></tr>
+      <tr><td>Gravitação universal G</td><td>6,6743×10⁻¹¹ N·m²/kg²</td><td>CODATA 2018</td></tr>
+      <tr><td>Massa / raio da Terra</td><td>5,972×10²⁴ kg / 6,371×10⁶ m</td><td>NASA Planetary Fact Sheet</td></tr>
+      <tr><td>Densidade do ar (nível do mar, 15 °C)</td><td>1,225 kg/m³</td><td>Atmosfera Padrão Internacional (ISA)</td></tr>
+      <tr><td>Velocidade do som (15 °C)</td><td>340,3 m/s</td><td>ISA, a=√(γRT)</td></tr>
+      <tr><td>Gravidade com altitude</td><td>g(h)=g·(R/(R+h))²</td><td>Lei do inverso do quadrado</td></tr>
+      <tr><td>Densidade do ar com altitude</td><td>Modelo ISA por camadas</td><td>ISA (troposfera/tropopausa/estratosfera)</td></tr>
+    </table>
+
+    <h2>Para aprofundar</h2>
+    <p>📄 <a href="relatorio_auditoria_fisica.md">Relatório de Auditoria de Realismo Físico</a> - análise
+      detalhada de cada arquivo, fórmula e cenário comparada com dados reais (NASA, CODATA, ISA, balística),
+      com tabelas e veredicto por módulo.</p>
+
+    <footer>
+      Laboratório de Forças 3D · feito para ensino de Física. Os valores planetários vêm da NASA; as constantes, do CODATA.
+      As fórmulas de cada cenário estão referenciadas nas páginas específicas.
+    </footer>
+  </div>
+</body>
+</html>

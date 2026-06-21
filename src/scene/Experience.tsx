@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { PLANETS, SURFACES } from "../physics";
 import { useStore } from "../state/store";
 import { runtime } from "./runtime";
-import { toScene } from "./transform";
+import { compressAltitude, toScene } from "./transform";
 import { Bodies } from "./Bodies";
 import { Arrows } from "./Arrows";
 import { Labels } from "./Labels";
@@ -52,7 +52,7 @@ function CameraRig() {
     if (!c) return;
     // Queda/Energia: começa enquadrando o objeto lá no alto (na altura escolhida).
     if (scenarioId === "queda") {
-      const hh = Math.max(2, quedaParams?.altura ?? 50);
+      const hh = compressAltitude(Math.max(2, quedaParams?.altura ?? 50));
       c.target.set(0, hh, 0);
       camera.position.set(5, hh + 2, 9);
       c.update();
@@ -185,16 +185,30 @@ function SpaceReference() {
   const planetId = useStore((s) => s.planetId);
   if (scenarioId !== "foguete" || PLANETS[planetId].g > 0) return null;
 
-  const rings = [];
-  for (let i = 0; i < 28; i++) {
-    rings.push(
-      <mesh key={i} position={[0, i * 14, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[7.7, 8, 72]} />
-        <meshBasicMaterial color="#2b4a6a" transparent opacity={0.22} side={THREE.DoubleSide} />
+  // Anéis de referência (a cada 10 u) + postes verticais com marcas: ao subir, o
+  // foguete passa por eles, deixando claro que ESTÁ se movendo (e o gás, recuando).
+  const markers = [];
+  for (let i = 0; i < 40; i++) {
+    const bright = i % 5 === 0; // anel mais forte a cada 5
+    markers.push(
+      <mesh key={`r${i}`} position={[0, i * 10, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[7.4, bright ? 8.2 : 7.8, 72]} />
+        <meshBasicMaterial color={bright ? "#7fb0e8" : "#3f6492"} transparent opacity={bright ? 0.55 : 0.35} side={THREE.DoubleSide} />
       </mesh>,
     );
   }
-  return <group>{rings}</group>;
+  // postes laterais com marcas curtas (referência vertical)
+  for (const x of [-8, 8]) {
+    for (let i = 0; i < 60; i++) {
+      markers.push(
+        <mesh key={`p${x}_${i}`} position={[x, i * 6 + 3, 0]}>
+          <boxGeometry args={[0.5, 0.12, 0.12]} />
+          <meshBasicMaterial color="#5f86b8" transparent opacity={0.5} />
+        </mesh>,
+      );
+    }
+  }
+  return <group>{markers}</group>;
 }
 
 // Ambiente de reflexos 100 % procedural (sem rede): painéis de luz (Lightformers)

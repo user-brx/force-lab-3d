@@ -107,6 +107,8 @@ body,
 
 .langtoggle {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--ink);
@@ -118,6 +120,7 @@ body,
   cursor: pointer;
   backdrop-filter: blur(8px);
   white-space: nowrap;
+  text-decoration: none;
 }
 
 .langtoggle:hover {

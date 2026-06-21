@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carro · Guia do Professor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">← Índice</a> · <a class="back" href="../">Simulador</a></p>
+      <h1>🚗 Carro</h1>
+      <p class="sub">Tração por atrito, curva de potência (P = F·v) e arrasto aerodinâmico.</p>
+    </header>
+
+    <h2>O conceito</h2>
+    <p>O motor não empurra o carro diretamente: ele gira a roda, que empurra o chão para trás por atrito; pela 3ª lei,
+      o chão empurra o carro para frente. A força de tração tem dois limites: a <strong>potência do motor</strong> (em alta
+      velocidade) e o <strong>atrito disponível</strong> (na largada / no gelo). Se a força pedida passa do atrito, a roda
+      <strong>patina</strong>.</p>
+
+    <h2>As fórmulas</h2>
+    <div class="formula">
+      P = F · v &nbsp;⇒&nbsp; F<sub>motor</sub> = P / v
+      <span class="where">Com potência P fixa, a força de tração cai quando a velocidade sobe (por isso a aceleração diminui).</span>
+    </div>
+    <div class="formula">
+      F<sub>tração</sub> = min( P/v , μ<sub>s</sub>·N ) &nbsp; (senão patina: μ<sub>k</sub>·N)
+      <span class="where">Na largada P/v é enorme, então o limite é o atrito. Em alta velocidade, o limite é a potência.</span>
+    </div>
+    <div class="formula">
+      F<sub>arrasto</sub> = ½ · ρ · C<sub>d</sub> · A · v²
+      <span class="where">ρ = densidade do ar; C<sub>d</sub> = coef. de arrasto; A = área frontal. Cresce com o quadrado da velocidade.</span>
+    </div>
+    <div class="formula">
+      v<sub>máx</sub> = ∛( 2·P / (ρ·C<sub>d</sub>·A) )
+      <span class="where">Velocidade máxima: quando a tração disponível iguala o arrasto.</span>
+    </div>
+
+    <h2>Valores reais usados</h2>
+    <table>
+      <tr><th>Parâmetro</th><th>Valor</th><th>Observação</th></tr>
+      <tr><td>C<sub>d</sub></td><td>0,30</td><td>hatch/sedã moderno</td></tr>
+      <tr><td>Área frontal A</td><td>2,2 m²</td><td>carro de passeio</td></tr>
+      <tr><td>Resist. de rolamento C<sub>rr</sub></td><td>0,012</td><td>pneu em asfalto</td></tr>
+      <tr><td>Potência (padrão)</td><td>150 kW</td><td>~200 cv</td></tr>
+      <tr><td>μ<sub>s</sub>/μ<sub>k</sub> gelo</td><td>0,1 / 0,03</td><td>patinação</td></tr>
+    </table>
+
+    <h2 id="ex">Exemplo resolvido</h2>
+    <div class="card example">
+      <p><strong>Arrasto a 100 km/h (27,8 m/s):</strong> F = ½·1,225·0,30·2,2·27,8² ≈ <strong>312 N</strong>.</p>
+      <p><strong>Velocidade máxima (150 kW):</strong> v<sub>máx</sub> = ∛(2·150000 / (1,225·0,30·2,2)) ≈ ∛(371 000) ≈ <strong>72 m/s ≈ 259 km/h</strong>.</p>
+      <p><strong>No gelo (1200 kg):</strong> a tração trava em μ<sub>k</sub>·N = 0,03·1200·9,81 ≈ <strong>353 N</strong> - a roda gira sem empurrar.</p>
+    </div>
+
+    <h2>Referências</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentos de Física, vol. 1</em> - Cap. 6 (Atrito, força e movimento) e Cap. 7 (Trabalho e energia, P=F·v).</li>
+      <li>HIBBELER. <em>Dinâmica (Mecânica para Engenharia)</em> - cinética da partícula; potência e eficiência.</li>
+      <li>GILLESPIE. <em>Fundamentals of Vehicle Dynamics</em> (SAE) - resistência de rolamento e arrasto.</li>
+    </ul>
+    <footer>O modelo P=F·v com teto de atrito é a descrição padrão de tração veicular.</footer>
+  </div>
+</body>
+</html>

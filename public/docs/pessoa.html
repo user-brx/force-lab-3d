@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pessoa caminhando · Guia do Professor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">← Índice</a> · <a class="back" href="../">Simulador</a></p>
+      <h1>🚶 Pessoa caminhando</h1>
+      <p class="sub">Leis de Newton (2ª e 3ª) e atrito estático.</p>
+    </header>
+
+    <h2>O conceito</h2>
+    <p>Ninguém se empurra para frente sozinho. Ao caminhar, o pé empurra o chão <em>para trás</em>; pela
+      <strong>3ª lei de Newton</strong>, o chão empurra a pessoa <em>para frente</em> com a mesma força. Essa força só
+      existe porque há <strong>atrito</strong> entre o pé e o solo - no gelo, o pé escorrega e quase não há propulsão.</p>
+    <p>A força que o chão devolve é uma força de <strong>atrito estático</strong>: ela se ajusta à necessidade, mas tem
+      um teto. Se a pessoa "pede" mais do que o teto, escorrega.</p>
+
+    <h2>As fórmulas</h2>
+    <div class="formula">
+      F<sub>resultante</sub> = m · a
+      <span class="where">2ª lei: a aceleração é proporcional à força resultante e inversa à massa.</span>
+    </div>
+    <div class="formula">
+      F<sub>A→B</sub> = − F<sub>B→A</sub>
+      <span class="where">3ª lei: ação e reação têm mesmo módulo, sentidos opostos, em corpos diferentes.</span>
+    </div>
+    <div class="formula">
+      f<sub>estático</sub> ≤ μ<sub>s</sub> · N &nbsp;&nbsp;|&nbsp;&nbsp; f<sub>cinético</sub> = μ<sub>k</sub> · N
+      <span class="where">N = força normal (= m·g em piso plano). Se a propulsão pedida passa de μ<sub>s</sub>·N, escorrega e vale μ<sub>k</sub>·N.</span>
+    </div>
+    <p>O simulador também mostra a "reação no astro": a mesma força vai para a Terra, mas como
+      a<sub>Terra</sub> = F / M<sub>Terra</sub> e M<sub>Terra</sub> ≈ 6×10²⁴ kg, a aceleração do planeta é desprezível (~10⁻²³ m/s²).</p>
+
+    <h2>Valores reais usados</h2>
+    <table>
+      <tr><th>Parâmetro</th><th>Faixa / valor</th><th>Observação</th></tr>
+      <tr><td>Massa da pessoa</td><td>ajustável (padrão 70 kg)</td><td>adulto típico</td></tr>
+      <tr><td>μ<sub>s</sub> / μ<sub>k</sub> asfalto</td><td>0,9 / 0,7</td><td>borracha-asfalto seco</td></tr>
+      <tr><td>μ<sub>s</sub> / μ<sub>k</sub> gelo</td><td>0,1 / 0,03</td><td>por isso escorrega</td></tr>
+      <tr><td>Velocidade de caminhada</td><td>converge p/ ~1,2-1,5 m/s</td><td>compatível com humano real</td></tr>
+    </table>
+
+    <h2 id="ex">Exemplo resolvido</h2>
+    <div class="card example">
+      <p><strong>Pessoa de 70 kg no asfalto.</strong> Peso = N = m·g = 70 × 9,81 = <strong>686,5 N</strong>.</p>
+      <p>Teto do atrito estático = μ<sub>s</sub>·N = 0,9 × 686,5 = <strong>617,9 N</strong>. Como a força muscular típica de caminhada
+        (algumas dezenas de newtons) é bem menor que isso, o pé <em>não</em> escorrega e toda a força vira propulsão.</p>
+      <p>No gelo o teto cai para μ<sub>s</sub>·N = 0,1 × 686,5 = 68,6 N; pedindo mais que isso, escorrega e a propulsão fica
+        limitada a μ<sub>k</sub>·N = 0,03 × 686,5 ≈ <strong>20,6 N</strong>.</p>
+    </div>
+
+    <h2>Referências</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentos de Física, vol. 1</em> - Cap. 5 (Leis de Newton) e Cap. 6 (Atrito).</li>
+      <li>YOUNG, FREEDMAN. <em>Física I (Sears & Zemansky)</em> - Cap. 4 e 5.</li>
+      <li>TIPLER, MOSCA. <em>Física para Cientistas e Engenheiros, vol. 1</em> - Cap. 4 e 5.</li>
+    </ul>
+    <footer>As fórmulas são as leis de Newton e o modelo de atrito de Coulomb, padrão em qualquer curso introdutório.</footer>
+  </div>
+</body>
+</html>

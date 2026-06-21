@@ -10,6 +10,7 @@ export function compressAltitude(y: number): number {
 
 /** Converte uma posição da física (metros reais) para coordenadas de cena. */
 export function toScene(v: Vec3, scenarioId: string): [number, number, number] {
-  if (scenarioId === "foguete") return [v.x, compressAltitude(v.y), v.z];
+  // Foguete e queda do espaço sobem/caem dezenas de km: comprime a altitude.
+  if (scenarioId === "foguete" || scenarioId === "queda") return [v.x, compressAltitude(v.y), v.z];
   return [v.x, v.y, v.z];
 }

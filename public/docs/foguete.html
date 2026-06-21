@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foguete · Guia do Professor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">← Índice</a> · <a class="back" href="../">Simulador</a></p>
+      <h1>🚀 Foguete</h1>
+      <p class="sub">Empuxo por expulsão de massa, equação de Tsiolkovsky, TWR e impulso específico.</p>
+    </header>
+
+    <h2>O conceito</h2>
+    <p>O empuxo nasce <em>dentro</em> do motor: o gás é jogado para um lado e o foguete vai para o outro com a mesma força
+      (3ª lei / conservação do momento) - exatamente como o fuzil. Por isso o foguete funciona (melhor!) no <strong>vácuo</strong>:
+      ele não empurra o ar, empurra o próprio gás que ejeta.</p>
+
+    <h2>As fórmulas</h2>
+    <div class="formula">
+      F<sub>empuxo</sub> = ṁ · v<sub>e</sub> = ṁ · I<sub>sp</sub> · g₀
+      <span class="where">ṁ = fluxo de massa (kg/s); v<sub>e</sub> = velocidade de exaustão; I<sub>sp</sub> = impulso específico (s).</span>
+    </div>
+    <div class="formula">
+      Δv = I<sub>sp</sub> · g₀ · ln( m₀ / m<sub>f</sub> )
+      <span class="where">Equação do foguete de Tsiolkovsky: m₀ = massa inicial (com combustível), m<sub>f</sub> = massa seca.</span>
+    </div>
+    <div class="formula">
+      TWR = F<sub>empuxo</sub> / (m · g)
+      <span class="where">Razão empuxo/peso. Só decola se TWR &gt; 1. Na Lua (g menor) decola com empuxo que não levantaria na Terra.</span>
+    </div>
+    <div class="formula">
+      I<sub>sp</sub>(h) = I<sub>sp,vác</sub> − (I<sub>sp,vác</sub> − I<sub>sp,nível-mar</sub>)·(ρ/ρ₀)
+      <span class="where">O empuxo cresce ~10-20 % no vácuo (sem contrapressão do ar na saída do bocal).</span>
+    </div>
+
+    <h2>Valores reais usados</h2>
+    <table>
+      <tr><th>Parâmetro</th><th>Valor</th><th>Observação</th></tr>
+      <tr><td>I<sub>sp</sub> vácuo</td><td>311 s</td><td>classe Merlin 1D (querosene/LOX)</td></tr>
+      <tr><td>I<sub>sp</sub> nível do mar</td><td>260 s</td><td>menor por causa da pressão do ar</td></tr>
+      <tr><td>v<sub>e</sub> no vácuo</td><td>311 × 9,81 ≈ 3050 m/s</td><td>velocidade de exaustão</td></tr>
+      <tr><td>Gravidade com altitude</td><td>g(h)=g·(R/(R+h))²</td><td>cai ~3 % a 100 km</td></tr>
+    </table>
+
+    <h2 id="ex">Exemplo resolvido</h2>
+    <div class="card example">
+      <p><strong>Fluxo de massa</strong> para 30 kN ao nível do mar: ṁ = F/(I<sub>sp</sub>·g₀) = 30000/(260·9,81) ≈ <strong>11,8 kg/s</strong>.</p>
+      <p><strong>Δv no vácuo</strong> com m₀ = 2000 kg e m<sub>f</sub> = 500 kg:
+        Δv = 311·9,81·ln(2000/500) = 3050·ln(4) = 3050·1,386 ≈ <strong>4228 m/s</strong>.</p>
+      <p><strong>TWR na Terra</strong> de um foguete de 2000 kg com 30 kN: TWR = 30000/(2000·9,81) ≈ <strong>1,53</strong> → decola.
+        Na Lua (g = 1,62) o mesmo empuxo dá TWR ≈ 9,3.</p>
+    </div>
+
+    <h2>Referências</h2>
+    <ul class="refs">
+      <li>SUTTON, BIBLARZ. <em>Rocket Propulsion Elements</em> - empuxo, I<sub>sp</sub>, velocidade de exaustão e efeito da altitude.</li>
+      <li>TSIOLKOVSKY, K. (1903) - equação do foguete (dedução por conservação de momento com massa variável).</li>
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentos de Física, vol. 1</em> - Cap. 9 (Sistemas de massa variável e centro de massa).</li>
+    </ul>
+    <footer>I<sub>sp</sub> = 260 s (nível do mar) é um valor representativo e conservador de motores querosene/LOX.</footer>
+  </div>
+</body>
+</html>

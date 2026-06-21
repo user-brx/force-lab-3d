@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avião · Guia do Professor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">← Índice</a> · <a class="back" href="../">Simulador</a></p>
+      <h1>✈️ Avião</h1>
+      <p class="sub">Sustentação, arrasto induzido e parasita, e a barreira do som (arrasto de onda).</p>
+    </header>
+
+    <h2>O conceito</h2>
+    <p>A hélice/turbina joga ar para trás e o ar empurra o avião para frente (3ª lei). As asas defletem o ar para baixo
+      (<em>downwash</em>) e o ar empurra as asas para cima: é a <strong>sustentação</strong>. Tudo depende do ar - sem atmosfera
+      o avião <strong>não voa</strong> (contraste direto com o foguete). Perto de Mach 1 surge o <strong>arrasto de onda</strong>,
+      a famosa "barreira do som".</p>
+
+    <h2>As fórmulas</h2>
+    <div class="formula">
+      L = ½ · ρ · v² · S · C<sub>L</sub> &nbsp;&nbsp; D = ½ · ρ · v² · S · C<sub>D</sub>
+      <span class="where">L = sustentação, D = arrasto; S = área da asa; C<sub>L</sub>, C<sub>D</sub> = coeficientes.</span>
+    </div>
+    <div class="formula">
+      C<sub>D</sub> = C<sub>D0</sub> + k·C<sub>L</sub>² + C<sub>D,onda</sub>(Mach)
+      <span class="where">Parasita (C<sub>D0</sub>) + induzido (∝ C<sub>L</sub>²) + arrasto de onda (dispara perto de Mach 1).</span>
+    </div>
+    <div class="formula">
+      v<sub>estol</sub> = √( 2·m·g / (ρ·S·C<sub>L,máx</sub>) )
+      <span class="where">Velocidade mínima para a sustentação igualar o peso. Como v ∝ 1/√ρ, no ar rarefeito (Marte) precisa-se de muito mais velocidade.</span>
+    </div>
+    <div class="formula">
+      Mach = v / a(h) &nbsp;&nbsp;&nbsp; a(h) = a₀·√( T(h)/T₀ )
+      <span class="where">A velocidade do som cai com a temperatura (lapse rate ISA até a tropopausa).</span>
+    </div>
+
+    <h2>Valores reais usados</h2>
+    <table>
+      <tr><th>Parâmetro</th><th>Valor</th><th>Observação</th></tr>
+      <tr><td>Área da asa S</td><td>30 m²</td><td>avião leve</td></tr>
+      <tr><td>C<sub>L,máx</sub></td><td>1,5</td><td>aerofólio típico</td></tr>
+      <tr><td>C<sub>D0</sub> (parasita)</td><td>0,03</td><td>limpo</td></tr>
+      <tr><td>Fator induzido k</td><td>0,045</td><td>-</td></tr>
+      <tr><td>Pico de arrasto de onda</td><td>~0,12 em Mach ≈ 1,05</td><td>curva gaussiana (aerofólios NACA 64-series)</td></tr>
+    </table>
+
+    <h2 id="ex">Exemplo resolvido</h2>
+    <div class="card example">
+      <p><strong>Velocidade de estol (3000 kg na Terra):</strong>
+        v<sub>estol</sub> = √(2·3000·9,81 / (1,225·30·1,5)) = √(58 860 / 55,1) ≈ <strong>32,7 m/s</strong> (~118 km/h).</p>
+      <p><strong>Em Marte</strong> (ρ = 0,02 kg/m³) o mesmo avião precisaria de v ∝ 1/√ρ ≈ <strong>7,8×</strong> mais velocidade -
+        praticamente impossível com asas normais. No ar denso de <strong>Vênus</strong> (ρ = 65) é o oposto: voa quase parado.</p>
+    </div>
+
+    <h2>Referências</h2>
+    <ul class="refs">
+      <li>ANDERSON, J. D. <em>Introduction to Flight</em> / <em>Fundamentals of Aerodynamics</em> - sustentação, arrasto induzido e arrasto de onda transônico.</li>
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentos de Física, vol. 1</em> - fluidos e a equação da pressão dinâmica.</li>
+      <li>ISA - <em>U.S. Standard Atmosphere 1976</em>: variação de temperatura, densidade e velocidade do som com a altitude.</li>
+    </ul>
+    <footer>O arrasto de onda é modelado como um pico em torno de Mach 1, comportamento medido em aerofólios reais.</footer>
+  </div>
+</body>
+</html>

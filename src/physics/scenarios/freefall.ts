@@ -62,6 +62,42 @@ function energyEquivalent(j: number): string {
   return `${fmt(tnt * 1000, 0)} ${L("g de TNT", "g TNT")}`;
 }
 
+// --- Efeitos do impacto (cratera + onda de choque) ---------------------------
+const RHO_TARGET = 2500; // densidade do solo-alvo (rocha, kg/m³)
+
+/** Diâmetro do impactor (m), tratado como esfera. */
+function impactorDiameter(mass: number): number {
+  return Math.cbrt((6 * mass) / (Math.PI * RHO_OBJ));
+}
+
+/**
+ * Diâmetro da cratera final (m) pela lei de escala de Collins, Melosh & Marcus
+ * (2005), "Earth Impact Effects Program" - regime de gravidade, impacto vertical:
+ *   D_transiente = 1.161·(ρi/ρt)^(1/3)·L^0.78·v^0.44·g^(-0.22)
+ *   D_final ≈ 1.25·D_transiente (cratera simples)
+ */
+function craterDiameter(mass: number, v: number, g: number): number {
+  if (g <= 0 || v <= 0) return 0;
+  const L = impactorDiameter(mass);
+  const Dtc = 1.161 * Math.cbrt(RHO_OBJ / RHO_TARGET) * L ** 0.78 * v ** 0.44 * g ** -0.22;
+  return 1.25 * Dtc;
+}
+
+/**
+ * Raio (m) de uma dada sobrepressão pela escala cubo-raiz (Hopkinson-Cranz):
+ * R = Z·(kg de TNT)^(1/3). Z em m/kg^(1/3): ~9.5 → destruição severa (~5 psi),
+ * ~35 → vidros quebrados (~1 psi). Glasstone & Dolan, "Effects of Nuclear Weapons".
+ */
+function blastRadius(energyJ: number, z: number): number {
+  return z * Math.cbrt(energyJ / TNT_J);
+}
+
+/** Formata uma distância em m ou km. */
+function fmtDist(m: number): string {
+  if (m >= 1000) return `${fmt(m / 1000, m >= 10000 ? 0 : 1)} km`;
+  return `${fmt(m, m < 10 ? 1 : 0)} m`;
+}
+
 export const freefall: Scenario<FallState> = {
   id: "queda",
   label: "Queda / Energia",
@@ -71,9 +107,10 @@ export const freefall: Scenario<FallState> = {
   surfaces: [],
   defaultPlanet: "terra",
   params: {
-    altura: { label: "Altura", labelEn: "Height", min: 1, max: 1000, step: 1, default: 50, unit: "m" },
-    massa: { label: "Massa", labelEn: "Mass", min: 1, max: 100000, step: 1, default: 10, unit: "kg" },
-    velInicial: { label: "Veloc. inicial", labelEn: "Initial speed", min: 0, max: 20000, step: 10, default: 0, unit: "m/s" },
+    // Até 100 km (linha de Kármán) - dá para soltar do espaço e ver a reentrada.
+    altura: { label: "Altura", labelEn: "Height", min: 5, max: 100000, step: 5, default: 100, unit: "m" },
+    massa: { label: "Massa", labelEn: "Mass", min: 1, max: 1000000, step: 1, default: 10, unit: "kg" },
+    velInicial: { label: "Veloc. inicial", labelEn: "Initial speed", min: 0, max: 30000, step: 10, default: 0, unit: "m/s" },
     // 0=bola, 1=cubo, 2=lança, 3=aerodinâmico. UI por botões (não slider).
     forma: { label: "Forma", labelEn: "Shape", min: 0, max: FALL_SHAPES.length - 1, step: 1, default: 0, unit: "" },
   },
@@ -127,11 +164,13 @@ export const freefall: Scenario<FallState> = {
       s.landed = true;
       s.impactV = s.v;
       s.impactKE = 0.5 * m * s.v * s.v;
-      // Efeito de impacto: escala (em log) com a energia liberada.
-      const big = Math.min(1, Math.log10(1 + s.impactKE) / 13);
-      s.events.push({ at: vec(0, 0.2, 0), kind: "blast", color: "#ffffff", maxRadius: 1.5 + big * 6, life: 0.2 });
-      s.events.push({ at: vec(0, 0.3, 0), kind: "blast", color: "#ffb347", maxRadius: 2 + big * 16, life: 0.6 });
-      s.events.push({ at: vec(0, 0.05, 0), kind: "ring", color: "#ff8a3c", maxRadius: 3 + big * 26, life: 0.9 });
+      // Onda de choque: o tamanho cresce (em log) com a energia liberada.
+      const mag = Math.min(1, Math.log10(1 + s.impactKE) / 14);
+      s.events.push({ at: vec(0, 0.3, 0), kind: "blast", color: "#ffffff", maxRadius: 1.5 + mag * 7, life: 0.18 }); // clarão
+      s.events.push({ at: vec(0, 0.6, 0), kind: "blast", color: "#ffc24d", maxRadius: 2 + mag * 15, life: 0.45 }); // bola de fogo
+      s.events.push({ at: vec(0, 1.0, 0), kind: "blast", color: "#ff7a2c", maxRadius: 1.5 + mag * 11, life: 0.75 }); // fumaça subindo
+      s.events.push({ at: vec(0, 0.05, 0), kind: "ring", color: "#ffce8a", maxRadius: 4 + mag * 36, life: 1.0 }); // onda de choque no solo
+      s.events.push({ at: vec(0, 0.05, 0), kind: "ring", color: "#9fb0c8", maxRadius: 2 + mag * 24, life: 0.75 }); // anel de poeira
     }
   },
 
@@ -169,11 +208,21 @@ export const freefall: Scenario<FallState> = {
       { label: L("Tempo de queda", "Fall time"), value: fmt(s.t, 2), unit: "s" },
     ];
     if (s.landed) {
+      const craterD = craterDiameter(m, s.impactV, g);
+      const craterDepth = craterD * 0.2; // cratera simples ~1:5
       readouts.push(
         { label: L("Veloc. de impacto", "Impact speed"), value: fmt(s.impactV, 1), unit: "m/s", highlight: true },
         { label: L("Energia no impacto", "Impact energy"), value: sci(s.impactKE, 2), unit: "J", highlight: true },
-        { label: L("Equivale a", "Equivalent to"), value: energyEquivalent(s.impactKE), unit: "" },
+        { label: L("Equivale a", "Equivalent to"), value: energyEquivalent(s.impactKE), unit: "", highlight: true },
       );
+      if (g > 0 && craterD > 0) {
+        readouts.push(
+          { label: L("Cratera (diâmetro)", "Crater (diameter)"), value: fmtDist(craterD), unit: "" },
+          { label: L("Cratera (profundidade)", "Crater (depth)"), value: fmtDist(craterDepth), unit: "" },
+          { label: L("Destruição severa até", "Severe destruction to"), value: fmtDist(blastRadius(s.impactKE, 9.5)), unit: "" },
+          { label: L("Vidros quebrados até", "Windows shattered to"), value: fmtDist(blastRadius(s.impactKE, 35)), unit: "" },
+        );
+      }
     }
 
     let note: string;
@@ -205,18 +254,35 @@ export const freefall: Scenario<FallState> = {
       labels,
       note,
       source: L(
-        `Conservação de energia: a energia total começa como potencial gravitacional E = m·g·h` +
-          ` e vira cinética ½·m·v² conforme cai. Com ar, parte vira calor (arrasto) e existe uma ` +
-          `velocidade terminal v = √(2·m·g / (ρ·Cd·A)). No impacto, a energia cinética (${energyEquivalent(e0)} no total) ` +
-          `é liberada de uma vez - é assim que um meteoro abre uma cratera.`,
-        `Energy conservation: total energy starts as gravitational potential E = m·g·h and becomes ` +
-          `kinetic ½·m·v² as it falls. With air, some becomes heat (drag) and there is a terminal speed ` +
-          `v = √(2·m·g / (ρ·Cd·A)). On impact, the kinetic energy (${energyEquivalent(e0)} total) is released ` +
-          `at once - that's how a meteor digs a crater.`,
+        `Conservação de energia: a energia total começa como potencial gravitacional E = m·g·h e vira ` +
+          `cinética ½·m·v² conforme cai. Com ar, parte vira calor (arrasto) e existe uma velocidade terminal ` +
+          `v = √(2·m·g / (ρ·Cd·A)). No impacto, a energia cinética (${energyEquivalent(e0)} no total) é liberada ` +
+          `de uma vez. A cratera segue a lei de escala de Collins, Melosh & Marcus (2005); o raio de destruição ` +
+          `usa a escala cubo-raiz de explosões (Glasstone & Dolan). É assim que um meteoro abre uma cratera.`,
+        `Energy conservation: total energy starts as gravitational potential E = m·g·h and becomes kinetic ` +
+          `½·m·v² as it falls. With air, some becomes heat (drag) and there is a terminal speed ` +
+          `v = √(2·m·g / (ρ·Cd·A)). On impact, the kinetic energy (${energyEquivalent(e0)} total) is released at once. ` +
+          `The crater uses Collins, Melosh & Marcus (2005) scaling; the destruction radius uses cube-root blast ` +
+          `scaling (Glasstone & Dolan). That's how a meteor digs a crater.`,
       ),
       particles: s.landed
-        ? [{ at: vec(0, 0.2, 0), dir: vec(0, 1, 0), speed: 6, spread: 1.2, count: 14, kind: "dust" as const }]
-        : [],
+        ? [
+            { at: vec(0, 0.3, 0), dir: vec(0, 1, 0), speed: 10, spread: 1.3, count: 22, kind: "dust" as const },
+            { at: vec(0, 0.5, 0), dir: vec(0, 1, 0), speed: 6, spread: 1.0, count: 12, kind: "smoke" as const },
+          ]
+        : // rastro tipo meteoro: quanto mais rápido na atmosfera, mais brilha
+          s.dropped && env.airDensity > 0 && speed > 80
+          ? [
+              {
+                at: objPos,
+                dir: vec(0, 1, 0), // atrás do objeto (ele cai, o rastro fica para cima)
+                speed: Math.min(22, speed * 0.06),
+                spread: 0.22,
+                count: Math.min(10, Math.round(speed / 120) + 2),
+                kind: speed > 300 ? ("exhaust" as const) : ("smoke" as const),
+              },
+            ]
+          : [],
       shocks,
       // segue o objeto na queda (antes de soltar, enquadra ele lá no alto)
       cameraTarget: vec(0, Math.max(0.8, s.y), 0),

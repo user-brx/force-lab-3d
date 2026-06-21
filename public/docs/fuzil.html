@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fuzil .50 · Guia do Professor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">← Índice</a> · <a class="back" href="../">Simulador</a></p>
+      <h1>🎯 Fuzil .50 BMG</h1>
+      <p class="sub">Conservação do momento (recuo), balística externa e penetração em barreiras.</p>
+    </header>
+
+    <h2>O conceito</h2>
+    <p>O gás da pólvora empurra a bala para frente e o fundo do cano para trás com a <strong>mesma força</strong> (3ª lei):
+      bala e arma ganham momentos iguais e opostos, cuja soma é zero. O <strong>freio de boca</strong> desvia parte dos gases
+      para os lados, reduzindo o recuo sentido - sem violar a conservação (o impulso total bala+gases+arma continua nulo).</p>
+
+    <h2>As fórmulas</h2>
+    <div class="formula">
+      p<sub>bala</sub> = m<sub>b</sub>·v<sub>b</sub> = m<sub>arma</sub>·v<sub>recuo</sub>
+      <span class="where">Conservação do momento: o recuo da arma equilibra o momento da bala.</span>
+    </div>
+    <div class="formula">
+      E<sub>c</sub> = ½·m·v² &nbsp;&nbsp;|&nbsp;&nbsp; F<sub>arrasto</sub> = ½·ρ·v²·C<sub>d</sub>(Mach)·A
+      <span class="where">A energia da bala é muito maior que a da arma (mesma p, mas v² favorece a leve). O C<sub>d</sub> varia com o número de Mach.</span>
+    </div>
+    <div class="formula">
+      Queda balística: Δy = ½·g·t²
+      <span class="where">Tiro horizontal cai como qualquer objeto: a 0,5 m de altura toca o solo em t=√(2·0,5/g)≈0,32 s - independe do calibre.</span>
+    </div>
+    <div class="formula">
+      Penetração (Poncelet): P = m / (2·A·ρ<sub>alvo</sub>) · ln( 1 + ρ<sub>alvo</sub>·v² / R )
+      <span class="where">R = resistência dinâmica do material. Velocidade ao atravessar espessura T: v<sub>r</sub>² = (v²+R/ρ)·e^(−2Aρ T/m) − R/ρ.</span>
+    </div>
+
+    <h2>Valores reais usados (.50 BMG M33)</h2>
+    <table>
+      <tr><th>Parâmetro</th><th>Valor</th><th>Observação</th></tr>
+      <tr><td>Massa da bala</td><td>42 g (661 gr)</td><td>projétil M33 Ball</td></tr>
+      <tr><td>Velocidade de saída</td><td>890 m/s</td><td>Mach 2,6 na Terra</td></tr>
+      <tr><td>Energia de boca</td><td>~16,6 kJ</td><td>½·0,042·890²</td></tr>
+      <tr><td>Massa arma+bipé</td><td>14 kg</td><td>Barrett M82A1</td></tr>
+      <tr><td>Penetração em aço</td><td>~25-30 mm</td><td>bate com dados reais</td></tr>
+    </table>
+
+    <h2 id="ex">Exemplo resolvido</h2>
+    <div class="card example">
+      <p><strong>Momento da bala:</strong> p = 0,042·890 = <strong>37,4 kg·m/s</strong>.</p>
+      <p><strong>Recuo sem freio:</strong> v = p/m<sub>arma</sub> = 37,4/14 = <strong>2,67 m/s</strong>; com freio de boca (~38 %) ≈ 1,0 m/s.</p>
+      <p><strong>Energias:</strong> bala ½·0,042·890² ≈ 16,6 kJ; arma ½·14·2,67² ≈ 50 J - a bala leva ~300× mais energia, embora o
+        momento seja o mesmo (porque E ∝ v²).</p>
+    </div>
+
+    <h2>Referências</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentos de Física, vol. 1</em> - Cap. 9 (Momento linear, impulso e colisões).</li>
+      <li>McCOY, R. <em>Modern Exterior Ballistics</em> - arrasto dependente do Mach e trajetória de projéteis.</li>
+      <li>PONCELET, J.-V. - lei de resistência à penetração (termo estático + termo inercial ρv²).</li>
+    </ul>
+    <footer>O modelo de penetração de Poncelet é calibrado para reproduzir a penetração real do .50 BMG nos materiais.</footer>
+  </div>
+</body>
+</html>

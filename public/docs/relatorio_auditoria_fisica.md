@@ -29,7 +29,7 @@
 
 ## 1. Arquivos Analisados - Resumo por Arquivo
 
-### 📄 [constants.ts](../src/physics/constants.ts)
+### 📄 [constants.ts](../../src/physics/constants.ts)
 
 | Constante | Código | Referência | Status |
 |---|---|---|---|
@@ -48,7 +48,7 @@
 
 ---
 
-### 📄 [math.ts](../src/physics/math.ts)
+### 📄 [math.ts](../../src/physics/math.ts)
 
 Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`, `norm`, `clamp`, `lerp`, `sign0`.
 
@@ -60,7 +60,7 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ---
 
-### 📄 [environments.ts](../src/physics/environments.ts)
+### 📄 [environments.ts](../../src/physics/environments.ts)
 
 **Planetas - dados vs. NASA Planetary Fact Sheet:**
 
@@ -83,7 +83,7 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ---
 
-### 📄 [person.ts](../src/physics/scenarios/person.ts) - Cenário Pessoa
+### 📄 [person.ts](../../src/physics/scenarios/person.ts) - Cenário Pessoa
 
 **Simulação realizada:**
 - Pessoa de 70 kg, força muscular 380 N, asfalto na Terra
@@ -102,7 +102,7 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ---
 
-### 📄 [car.ts](../src/physics/scenarios/car.ts) - Cenário Carro
+### 📄 [car.ts](../../src/physics/scenarios/car.ts) - Cenário Carro
 
 **Simulação realizada:**
 - Carro de 1200 kg, motor 4500 N, Cd=0.3, A=2.2 m², Terra + asfalto
@@ -123,7 +123,7 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ---
 
-### 📄 [airplane.ts](../src/physics/scenarios/airplane.ts) - Cenário Avião
+### 📄 [airplane.ts](../../src/physics/scenarios/airplane.ts) - Cenário Avião
 
 **Simulação realizada:**
 - Avião 3000 kg, empuxo 22 kN, asa 30 m², CL_max 1.5, Terra
@@ -146,7 +146,7 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ---
 
-### 📄 [rocket.ts](../src/physics/scenarios/rocket.ts) - Cenário Foguete
+### 📄 [rocket.ts](../../src/physics/scenarios/rocket.ts) - Cenário Foguete
 
 **Simulação realizada:**
 - Foguete 500 kg seco + 1500 kg combustível, empuxo 30 kN, Isp 280 s, vácuo
@@ -176,7 +176,7 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ---
 
-### 📄 [revolver.ts](../src/physics/scenarios/revolver.ts) - Cenário Fuzil .50 BMG
+### 📄 [revolver.ts](../../src/physics/scenarios/revolver.ts) - Cenário Fuzil .50 BMG
 
 **Este é o cenário mais complexo** - 494 linhas com balística real do .50 BMG M33 Ball.
 
@@ -228,7 +228,7 @@ A equação de Poncelet implementada: `P = (m / (2·A·ρ)) · ln(1 + ρ·v²/R)
 
 ---
 
-### 📄 [skaters.ts](../src/physics/scenarios/skaters.ts) - Cenário Patinadores
+### 📄 [skaters.ts](../../src/physics/scenarios/skaters.ts) - Cenário Patinadores
 
 **Simulação realizada:**
 - Azul 60 kg, Vermelho 90 kg, empurrão 300 N por 0.4 s, vácuo + gelo
@@ -244,7 +244,7 @@ A equação de Poncelet implementada: `P = (m / (2·A·ρ)) · ln(1 + ρ·v²/R)
 
 ---
 
-### 📄 [Engine.tsx](../src/scene/Engine.tsx) - Loop de Integração
+### 📄 [Engine.tsx](../../src/scene/Engine.tsx) - Loop de Integração
 
 | Parâmetro | Valor | Nota |
 |---|---|---|
@@ -258,11 +258,11 @@ A equação de Poncelet implementada: `P = (m / (2·A·ρ)) · ln(1 + ρ·v²/R)
 
 ---
 
-### 📄 [format.ts](../src/physics/format.ts)
+### 📄 [format.ts](../../src/physics/format.ts)
 
 Formatação pt-BR com notação científica Unicode (⁻²³). Lida corretamente com o caso de arredondamento da mantissa para 10 (normaliza para 1×10^(n+1)). ✅
 
-### 📄 [types.ts](../src/physics/types.ts)
+### 📄 [types.ts](../../src/physics/types.ts)
 
 Contratos bem definidos: `Scenario<S>`, `SceneView`, `ForceArrow`, `BodyPose`, etc. O desacoplamento entre física e renderização é limpo. ✅
 
@@ -274,9 +274,9 @@ Estas NÃO são erros - são simplificações honestas, devidamente documentadas
 
 | # | Simplificação | Impacto | Onde |
 |---|---|---|---|
-| 1 | **Euler semi-implícito** | Erro numérico ~1-3% vs. analítico (aceitável) | [Engine.tsx](../src/scene/Engine.tsx) |
-| 2 | **Astro não se desloca** (3ª lei) | A aceleração é calculada e exibida, mas o planeta não move (massa gigantesca → invisível) | [person.ts](../src/physics/scenarios/person.ts) |
-| 3 | **Resistência de rolamento** | O CRR é constante (0.012), sem a leve variação com a velocidade. Impacto negligível. | [car.ts](../src/physics/scenarios/car.ts) |
+| 1 | **Euler semi-implícito** | Erro numérico ~1-3% vs. analítico (aceitável) | [Engine.tsx](../../src/scene/Engine.tsx) |
+| 2 | **Astro não se desloca** (3ª lei) | A aceleração é calculada e exibida, mas o planeta não move (massa gigantesca → invisível) | [person.ts](../../src/physics/scenarios/person.ts) |
+| 3 | **Resistência de rolamento** | O CRR é constante (0.012), sem a leve variação com a velocidade. Impacto negligível. | [car.ts](../../src/physics/scenarios/car.ts) |
 
 ---
 ## 3. Resultado dos Testes
@@ -294,7 +294,7 @@ Estas NÃO são erros - são simplificações honestas, devidamente documentadas
 ✓ Smoke - nenhuma simulação gera NaN/Infinito (36 testes)
 ```
 
-### Testes de Auditoria (64) - [audit.test.ts](../src/physics/__tests__/audit.test.ts)
+### Testes de Auditoria (64) - [audit.test.ts](../../src/physics/__tests__/audit.test.ts)
 
 ```
 ✓ Constantes físicas vs. valores de referência (5 testes)

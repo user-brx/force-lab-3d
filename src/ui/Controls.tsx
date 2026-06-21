@@ -42,6 +42,15 @@ export function TopBar() {
           );
         })}
       </div>
+      <a
+        className="langtoggle"
+        href="docs/"
+        target="_blank"
+        rel="noopener"
+        title={L("Guia do professor", "Teacher's guide")}
+      >
+        📖 {L("Docs", "Docs")}
+      </a>
       <button
         className="langtoggle"
         onClick={() => setLang(lang === "pt" ? "en" : "pt")}

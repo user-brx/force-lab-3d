@@ -1,0 +1,73 @@
+/* Documentação para professores - Laboratório de Forças 3D */
+:root {
+  --bg: #0e1626;
+  --card: #16213a;
+  --ink: #e8eef7;
+  --ink-soft: #9fb0c8;
+  --accent: #4d9fff;
+  --accent2: #e7c96a;
+  --line: rgba(120, 150, 200, 0.22);
+  --formula-bg: #0a1322;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  line-height: 1.6;
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+header.top {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+  margin-bottom: 28px;
+}
+a { color: var(--accent); }
+.back { font-size: 14px; }
+h1 { font-size: 30px; margin: 8px 0 4px; letter-spacing: 0.3px; }
+h2 { font-size: 21px; margin: 32px 0 10px; color: var(--accent); border-left: 3px solid var(--accent); padding-left: 10px; }
+h3 { font-size: 16px; margin: 20px 0 6px; color: var(--accent2); }
+.sub { color: var(--ink-soft); margin: 0; }
+p, li { color: var(--ink); }
+small, .muted { color: var(--ink-soft); }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 16px 0;
+}
+.formula {
+  background: var(--formula-bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  font-family: "Cambria Math", "Latin Modern Math", Georgia, serif;
+  font-size: 18px;
+  text-align: center;
+  overflow-x: auto;
+}
+.formula .where { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 8px; font-family: var(--ink); }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--accent2); font-weight: 600; }
+td code, .formula code { background: none; }
+code { background: #0a1322; padding: 1px 6px; border-radius: 5px; font-size: 14px; }
+.example { border-left: 3px solid var(--accent2); }
+.refs li { margin-bottom: 6px; font-size: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 18px; }
+.grid a.tile {
+  display: block; text-decoration: none; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+  transition: border-color .15s, transform .1s;
+}
+.grid a.tile:hover { border-color: var(--accent); transform: translateY(-2px); }
+.grid .ico { font-size: 26px; }
+.grid .t { font-weight: 600; margin: 6px 0 2px; }
+.grid .d { font-size: 13px; color: var(--ink-soft); }
+.tag { display: inline-block; font-size: 12px; color: var(--accent); border: 1px solid var(--line); border-radius: 20px; padding: 2px 10px; margin-right: 6px; }
+.note { background: rgba(77,159,255,.08); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; font-size: 14px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 13px; }

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Queda / Energia · Guia do Professor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">← Índice</a> · <a class="back" href="../">Simulador</a></p>
+      <h1>☄️ Queda / Energia cinética</h1>
+      <p class="sub">Conversão energia potencial → cinética, velocidade terminal e energia de impacto (até meteoros).</p>
+    </header>
+
+    <h2>O conceito</h2>
+    <p>Um objeto soltado de uma altura começa com energia <strong>potencial gravitacional</strong> e a converte em energia
+      <strong>cinética</strong> ao cair. Com ar, parte vira calor (arrasto) e existe uma <strong>velocidade terminal</strong>.
+      No impacto, a energia cinética é liberada de uma vez - é assim que um meteoro abre uma cratera. O simulador deixa
+      escolher altura (até o espaço), massa, velocidade inicial e a <strong>forma</strong> (que muda o arrasto).</p>
+
+    <h2>As fórmulas</h2>
+    <div class="formula">
+      E<sub>pot</sub> = m·g·h &nbsp;&nbsp;⟶&nbsp;&nbsp; E<sub>cin</sub> = ½·m·v²
+      <span class="where">Sem ar: ½·m·v² = m·g·h ⇒ v = √(2·g·h), independente da massa.</span>
+    </div>
+    <div class="formula">
+      v<sub>terminal</sub> = √( 2·m·g / (ρ·C<sub>d</sub>·A) )
+      <span class="where">Quando o arrasto iguala o peso, a queda para de acelerar. Objetos grandes (meteoros) quase não desaceleram.</span>
+    </div>
+    <div class="formula">
+      Cratera (Collins 2005): D<sub>tr</sub> = 1,161·(ρ<sub>i</sub>/ρ<sub>t</sub>)<sup>1/3</sup>·L<sup>0,78</sup>·v<sup>0,44</sup>·g<sup>−0,22</sup>
+      <span class="where">L = diâmetro do impactor; D<sub>final</sub> ≈ 1,25·D<sub>tr</sub>; profundidade ≈ D/5 (cratera simples).</span>
+    </div>
+    <div class="formula">
+      Raio de destruição: R = Z · (kg de TNT)<sup>1/3</sup>
+      <span class="where">Escala cubo-raiz (Hopkinson-Cranz): Z≈9,5 m/kg<sup>1/3</sup> p/ destruição severa (~5 psi); ≈35 p/ vidros (~1 psi).</span>
+    </div>
+    <div class="formula">
+      Equivalência: 1 kg de TNT = 4,184×10⁶ J &nbsp;|&nbsp; Hiroshima ≈ 6,3×10¹³ J
+      <span class="where">Permite expressar a energia do impacto em toneladas de TNT ou bombas de Hiroshima.</span>
+    </div>
+
+    <h2>Formas e coeficiente de arrasto</h2>
+    <table>
+      <tr><th>Forma</th><th>C<sub>d</sub></th><th>Efeito</th></tr>
+      <tr><td>Bola (esfera)</td><td>0,47</td><td>referência</td></tr>
+      <tr><td>Cubo</td><td>1,05</td><td>mais arrasto, cai mais devagar</td></tr>
+      <tr><td>Lança</td><td>0,10</td><td>pouca área frontal</td></tr>
+      <tr><td>Aerodinâmico (gota)</td><td>0,04</td><td>arrasto mínimo, cai mais rápido</td></tr>
+    </table>
+
+    <h2 id="ex">Exemplo resolvido</h2>
+    <div class="card example">
+      <p><strong>Pedra de 10 kg, 50 m, sem ar (Lua não, mas conceitualmente):</strong> v = √(2·9,81·50) = <strong>31,3 m/s</strong>;
+        E<sub>cin</sub> = m·g·h = 10·9,81·50 = <strong>4905 J ≈ 1,2 kg de TNT</strong>.</p>
+      <p><strong>"Asteroide" de 500 t a 15 km/s:</strong> E = ½·500000·15000² ≈ <strong>5,6×10¹³ J ≈ 13 kton de TNT ≈ 0,9 Hiroshima</strong>.
+        Cratera ≈ 280 m de diâmetro, destruição severa num raio de ~2 km, vidros quebrados a ~8 km.</p>
+    </div>
+
+    <h2>Referências</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentos de Física, vol. 1</em> - Cap. 7 e 8 (Trabalho, energia cinética e potencial; conservação).</li>
+      <li>COLLINS, MELOSH, MARCUS (2005). <em>Earth Impact Effects Program</em> - Meteoritics &amp; Planetary Science 40 - escala de crateras.</li>
+      <li>GLASSTONE, DOLAN. <em>The Effects of Nuclear Weapons</em> - escala cubo-raiz de sobrepressão (raios de dano).</li>
+      <li>MELOSH, H. J. <em>Impact Cratering: A Geologic Process</em> - física de impactos.</li>
+    </ul>
+    <footer>As leis de escala de cratera e de explosão são as usadas por cientistas planetários e em efeitos de armas.</footer>
+  </div>
+</body>
+</html>
