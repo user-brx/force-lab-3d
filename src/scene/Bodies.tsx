@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { useStore } from "../state/store";
 import { runtime } from "./runtime";
 import { toScene } from "./transform";
-import { AirplaneModel, BarrierModel, BulletModel, CarModel, Humanoid, RevolverModel, RocketModel } from "./models";
+import { AirplaneModel, BarrierModel, BulletModel, CarModel, FallingObjectModel, Humanoid, RevolverModel, RocketModel } from "./models";
 
 // Renderiza os modelos do cenário ativo e atualiza a transform de cada um
 // a cada frame, a partir do snapshot da física.
@@ -54,10 +54,12 @@ export function Bodies() {
       )}
       {scenarioId === "patinadores" && (
         <>
+          {/* azul à esquerda olhando para +x; vermelho à direita olhando para -x → um para o outro */}
           <Humanoid ref={reg("skaterA")} bodyId="skaterA" color="#4d9fff" skates />
-          <Humanoid ref={reg("skaterB")} bodyId="skaterB" color="#ff5a4d" skates />
+          <Humanoid ref={reg("skaterB")} bodyId="skaterB" color="#ff5a4d" skates faceLeft />
         </>
       )}
+      {scenarioId === "queda" && <FallingObjectModel ref={reg("fallobj")} />}
     </>
   );
 }

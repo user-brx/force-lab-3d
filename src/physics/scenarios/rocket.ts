@@ -313,10 +313,19 @@ export const rocket: Scenario<RocketState> = {
               at: base,
               dir: nozzleDir,
               // No vácuo o jato se expande mais (sem contrapressão do ar).
-              speed: env.airDensity <= 0.01 ? 46 : 30,
-              spread: (env.airDensity <= 0.01 ? 0.45 : 0.12) + Math.abs(s.gimbal) * 2,
-              count: env.airDensity <= 0.01 ? 12 : 8,
+              speed: env.airDensity <= 0.01 ? 50 : 32,
+              spread: (env.airDensity <= 0.01 ? 0.5 : 0.12) + Math.abs(s.gimbal) * 2,
+              count: env.airDensity <= 0.01 ? 18 : 10,
               kind: "exhaust",
+            },
+            // Fumaça/plume mais lento dá volume ao jato (bem aberto no vácuo).
+            {
+              at: base,
+              dir: nozzleDir,
+              speed: env.airDensity <= 0.01 ? 26 : 16,
+              spread: (env.airDensity <= 0.01 ? 0.8 : 0.22) + Math.abs(s.gimbal) * 2,
+              count: env.airDensity <= 0.01 ? 12 : 6,
+              kind: "smoke",
             },
           ]
         : [],

@@ -18,6 +18,7 @@ export {
 
 export { BARRIER_MATERIALS, BARRIER_CENTER_Y, BARRIER_HEIGHT } from "./scenarios/revolver";
 export type { BarrierMaterial } from "./scenarios/revolver";
+export { FALL_SHAPES } from "./scenarios/freefall";
 
 import { airplane } from "./scenarios/airplane";
 import { car } from "./scenarios/car";
@@ -25,6 +26,7 @@ import { person } from "./scenarios/person";
 import { revolver } from "./scenarios/revolver";
 import { rocket } from "./scenarios/rocket";
 import { skaters } from "./scenarios/skaters";
+import { freefall } from "./scenarios/freefall";
 import type { Scenario } from "./types";
 
 /** Registro de todos os cenários, na ordem de exibição. */
@@ -35,8 +37,9 @@ export const SCENARIOS: Record<string, Scenario<unknown>> = {
   foguete: rocket as Scenario<unknown>,
   revolver: revolver as Scenario<unknown>,
   patinadores: skaters as Scenario<unknown>,
+  queda: freefall as Scenario<unknown>,
 };
 
 export type ScenarioId = keyof typeof SCENARIOS;
 
-export const SCENARIO_ORDER: string[] = ["pessoa", "carro", "aviao", "foguete", "revolver", "patinadores"];
+export const SCENARIO_ORDER: string[] = ["pessoa", "carro", "aviao", "foguete", "revolver", "patinadores", "queda"];

@@ -3,7 +3,7 @@
 **Projeto:** Laboratório de Forças 3D  
 **Data:** 18/06/2026  
 **Método:** Análise linha a linha de cada fórmula + simulação numérica contra valores reais  
-**Testes executados:** 117 (53 originais + 64 de auditoria) — **todos passando ✅**
+**Testes executados:** 117 (53 originais + 64 de auditoria) - **todos passando ✅**
 
 ---
 
@@ -27,7 +27,7 @@
 
 ---
 
-## 1. Arquivos Analisados — Resumo por Arquivo
+## 1. Arquivos Analisados - Resumo por Arquivo
 
 ### 📄 [constants.ts](../src/physics/constants.ts)
 
@@ -62,11 +62,11 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ### 📄 [environments.ts](../src/physics/environments.ts)
 
-**Planetas — dados vs. NASA Planetary Fact Sheet:**
+**Planetas - dados vs. NASA Planetary Fact Sheet:**
 
 | Planeta | g (código) | g (NASA) | ρ ar (código) | ρ ar (ref.) | Raio (código) | Raio (NASA) | Status |
 |---|---|---|---|---|---|---|---|
-| Vácuo | 0 | — | 0 | — | — | — | ✅ |
+| Vácuo | 0 | - | 0 | - | - | - | ✅ |
 | Lua | 1.62 | 1.62 | 0 | 0 | 1.737×10⁶ | 1.7374×10⁶ | ✅ |
 | Marte | 3.71 | 3.721 | 0.02 | ~0.020 | 3.3895×10⁶ | 3.3895×10⁶ | ✅ |
 | Vênus | 8.87 | 8.87 | 65 | ~65 | 6.0518×10⁶ | 6.0518×10⁶ | ✅ |
@@ -77,17 +77,17 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 | Superfície | μs (código) | μs (ref.) | μk (código) | μk (ref.) | Status |
 |---|---|---|---|---|---|
-| Asfalto | 0.9 | 0.8–1.0 | 0.7 | 0.6–0.8 | ✅ |
-| Gelo | 0.1 | 0.05–0.15 | 0.03 | 0.02–0.05 | ✅ |
-| Areia | 0.6 | 0.5–0.65 | 0.45 | 0.4–0.5 | ✅ |
+| Asfalto | 0.9 | 0.8-1.0 | 0.7 | 0.6-0.8 | ✅ |
+| Gelo | 0.1 | 0.05-0.15 | 0.03 | 0.02-0.05 | ✅ |
+| Areia | 0.6 | 0.5-0.65 | 0.45 | 0.4-0.5 | ✅ |
 
 ---
 
-### 📄 [person.ts](../src/physics/scenarios/person.ts) — Cenário Pessoa
+### 📄 [person.ts](../src/physics/scenarios/person.ts) - Cenário Pessoa
 
 **Simulação realizada:**
 - Pessoa de 70 kg, força muscular 380 N, asfalto na Terra
-- Resultado: velocidade converge para **~1.4 m/s** (humano real: 1.2–1.5 m/s) ✅
+- Resultado: velocidade converge para **~1.4 m/s** (humano real: 1.2-1.5 m/s) ✅
 
 **Fórmulas verificadas:**
 
@@ -102,7 +102,7 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ---
 
-### 📄 [car.ts](../src/physics/scenarios/car.ts) — Cenário Carro
+### 📄 [car.ts](../src/physics/scenarios/car.ts) - Cenário Carro
 
 **Simulação realizada:**
 - Carro de 1200 kg, motor 4500 N, Cd=0.3, A=2.2 m², Terra + asfalto
@@ -112,18 +112,18 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 | Fórmula | Implementação | Verificação |
 |---|---|---|
-| Arrasto: ½ρCdAv² | `0.5 * airDensity * CD * FRONTAL_AREA * v²` | A 100 km/h: ~312 N (ref: 300–350) ✅ |
+| Arrasto: ½ρCdAv² | `0.5 * airDensity * CD * FRONTAL_AREA * v²` | A 100 km/h: ~312 N (ref: 300-350) ✅ |
 | Resistência de rolamento | `CRR * N` (CRR = 0.012) | Valor típico ✅ |
 | Tração limitada por atrito | `muS * N` ou `muK * N` se spinning | ✅ |
 | No gelo: patina | Tração → μk·N = 353 N | ✅ |
 
 **Coeficientes aerodinâmicos:**
-- Cd = 0.3 (hatch compacto: 0.25–0.35) ✅
-- Área frontal = 2.2 m² (típico: 2.0–2.4) ✅
+- Cd = 0.3 (hatch compacto: 0.25-0.35) ✅
+- Área frontal = 2.2 m² (típico: 2.0-2.4) ✅
 
 ---
 
-### 📄 [airplane.ts](../src/physics/scenarios/airplane.ts) — Cenário Avião
+### 📄 [airplane.ts](../src/physics/scenarios/airplane.ts) - Cenário Avião
 
 **Simulação realizada:**
 - Avião 3000 kg, empuxo 22 kN, asa 30 m², CL_max 1.5, Terra
@@ -139,14 +139,14 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 | Empuxo ∝ ρ (hélice/jato) | Rho ratio aplicado ao empuxo | ✅ |
 | Sem ar → sem voo | T=0, lift=0 no vácuo | ✅ |
 
-**Em Marte:** V_stall × 7.8 (ρ = 0.02 vs 1.225), precisa de velocidade ~285 m/s — coerente, avião basicamente não voa ✅
+**Em Marte:** V_stall × 7.8 (ρ = 0.02 vs 1.225), precisa de velocidade ~285 m/s - coerente, avião basicamente não voa ✅
 
 > [!NOTE]
 > **Simplificação conhecida (documentada):** Não há aumento de arrasto transônico (wave drag). O avião cruza Mach 1 mais fácil do que na realidade. Isso é declarado no README como simplificação honesta.
 
 ---
 
-### 📄 [rocket.ts](../src/physics/scenarios/rocket.ts) — Cenário Foguete
+### 📄 [rocket.ts](../src/physics/scenarios/rocket.ts) - Cenário Foguete
 
 **Simulação realizada:**
 - Foguete 500 kg seco + 1500 kg combustível, empuxo 30 kN, Isp 280 s, vácuo
@@ -176,9 +176,9 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 ---
 
-### 📄 [revolver.ts](../src/physics/scenarios/revolver.ts) — Cenário Fuzil .50 BMG
+### 📄 [revolver.ts](../src/physics/scenarios/revolver.ts) - Cenário Fuzil .50 BMG
 
-**Este é o cenário mais complexo** — 494 linhas com balística real do .50 BMG M33 Ball.
+**Este é o cenário mais complexo** - 494 linhas com balística real do .50 BMG M33 Ball.
 
 **Dados do projétil vs. dados militares reais:**
 
@@ -195,13 +195,13 @@ Biblioteca de vetores 3D pura. Operações: `add`, `sub`, `scale`, `dot`, `len`,
 
 | Mach | Cd (código) | Cd (dados balísticos) | Status |
 |---|---|---|---|
-| 0.0–0.70 | 0.14 | ~0.12–0.15 (subsônico) | ✅ |
-| 0.95 | 0.30 | ~0.28–0.32 (transônico) | ✅ |
-| 1.05 | 0.43 | ~0.40–0.45 (pico transônico) | ✅ |
-| 2.00 | 0.32 | ~0.30–0.34 (supersônico) | ✅ |
-| 3.00 | 0.29 | ~0.28–0.30 | ✅ |
+| 0.0-0.70 | 0.14 | ~0.12-0.15 (subsônico) | ✅ |
+| 0.95 | 0.30 | ~0.28-0.32 (transônico) | ✅ |
+| 1.05 | 0.43 | ~0.40-0.45 (pico transônico) | ✅ |
+| 2.00 | 0.32 | ~0.30-0.34 (supersônico) | ✅ |
+| 3.00 | 0.29 | ~0.28-0.30 | ✅ |
 
-**Desaceleração inicial:** ~455 m/s² (calculado) vs. ~430–470 m/s² esperado ✅
+**Desaceleração inicial:** ~455 m/s² (calculado) vs. ~430-470 m/s² esperado ✅
 
 **Penetração de barreiras (modelo de Poncelet):**
 
@@ -209,10 +209,10 @@ A equação de Poncelet implementada: `P = (m / (2·A·ρ)) · ln(1 + ρ·v²/R)
 
 | Material | Penetração (código) | Penetração (ref. real) | Status |
 |---|---|---|---|
-| Aço RHA | ~29 mm | 25–30 mm | ✅ |
-| Concreto | ~12 cm | 10–15 cm | ✅ |
+| Aço RHA | ~29 mm | 25-30 mm | ✅ |
+| Concreto | ~12 cm | 10-15 cm | ✅ |
 | Gel balístico | ~1.0 m | ~1 m | ✅ |
-| Madeira | ~0.5 m | ~0.4–0.6 m | ✅ |
+| Madeira | ~0.5 m | ~0.4-0.6 m | ✅ |
 
 **Conservação de momento no disparo:**
 
@@ -228,7 +228,7 @@ A equação de Poncelet implementada: `P = (m / (2·A·ρ)) · ln(1 + ρ·v²/R)
 
 ---
 
-### 📄 [skaters.ts](../src/physics/scenarios/skaters.ts) — Cenário Patinadores
+### 📄 [skaters.ts](../src/physics/scenarios/skaters.ts) - Cenário Patinadores
 
 **Simulação realizada:**
 - Azul 60 kg, Vermelho 90 kg, empurrão 300 N por 0.4 s, vácuo + gelo
@@ -244,7 +244,7 @@ A equação de Poncelet implementada: `P = (m / (2·A·ρ)) · ln(1 + ρ·v²/R)
 
 ---
 
-### 📄 [Engine.tsx](../src/scene/Engine.tsx) — Loop de Integração
+### 📄 [Engine.tsx](../src/scene/Engine.tsx) - Loop de Integração
 
 | Parâmetro | Valor | Nota |
 |---|---|---|
@@ -270,7 +270,7 @@ Contratos bem definidos: `Scenario<S>`, `SceneView`, `ForceArrow`, `BodyPose`, e
 
 ## 2. Simplificações Conhecidas (Documentadas no README)
 
-Estas NÃO são erros — são simplificações honestas, devidamente documentadas:
+Estas NÃO são erros - são simplificações honestas, devidamente documentadas:
 
 | # | Simplificação | Impacto | Onde |
 |---|---|---|---|
@@ -294,7 +294,7 @@ Estas NÃO são erros — são simplificações honestas, devidamente documentad
 ✓ Smoke - nenhuma simulação gera NaN/Infinito (36 testes)
 ```
 
-### Testes de Auditoria (64) — [audit.test.ts](../src/physics/__tests__/audit.test.ts)
+### Testes de Auditoria (64) - [audit.test.ts](../src/physics/__tests__/audit.test.ts)
 
 ```
 ✓ Constantes físicas vs. valores de referência (5 testes)
@@ -322,7 +322,7 @@ O simulador **Laboratório de Forças 3D** é fisicamente correto dentro das sim
 
 1. **Cada constante** vem de fonte real (CODATA, NASA)
 2. **Cada fórmula** corresponde à equação de livro-texto
-3. **A 3ª lei** é respeitada em todos os cenários — sem exceção
+3. **A 3ª lei** é respeitada em todos os cenários - sem exceção
 4. **A conservação de momento** é verificada numericamente (erro < 10⁻⁶)
 5. **O cenário do fuzil .50** usa dados balísticos reais do M33 Ball com Cd variável por Mach
 6. **O modelo de Poncelet** para penetração produz valores na faixa correta para todos os materiais

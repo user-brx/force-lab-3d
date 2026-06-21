@@ -1,5 +1,6 @@
 import {
   BARRIER_MATERIALS,
+  FALL_SHAPES,
   L,
   PLANETS,
   PLANET_ORDER,
@@ -128,8 +129,8 @@ export function SidePanel() {
   const hasGravity = PLANETS[planetId].g > 0;
   const showSurfaces = sc.surfaces.length > 0 && hasGravity;
 
-  // Params da barreira do rifle têm UI própria (não entram nos sliders genéricos).
-  const BARRIER_KEYS = ["jato", "barreira", "material", "espessura", "distancia"];
+  // Params com UI própria (botões), fora dos sliders genéricos.
+  const BARRIER_KEYS = ["jato", "barreira", "material", "espessura", "distancia", "forma"];
 
   return (
     <div className="left-col">
@@ -177,6 +178,36 @@ export function SidePanel() {
       </div>
 
       {scenarioId === "revolver" && <BarrierPanel params={params} setParam={setParam} />}
+      {scenarioId === "queda" && <ShapePanel params={params} setParam={setParam} />}
+    </div>
+  );
+}
+
+/** Seletor de forma do objeto que cai (muda o arrasto aerodinâmico). */
+function ShapePanel({
+  params,
+  setParam,
+}: {
+  params?: Record<string, number>;
+  setParam: (key: string, value: number) => void;
+}) {
+  useStore((s) => s.lang);
+  const idx = Math.round(params?.forma ?? 0);
+  return (
+    <div className="panel">
+      <h2>{L("Forma do objeto", "Object shape")}</h2>
+      <div className="btn-row" style={{ flexDirection: "column", alignItems: "stretch" }}>
+        {FALL_SHAPES.map((sh, i) => (
+          <button
+            key={sh.id}
+            className={`btn ${idx === i ? "on" : ""}`}
+            style={{ flex: "0 0 auto" }}
+            onClick={() => setParam("forma", i)}
+          >
+            {L(sh.label, sh.labelEn)}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -304,6 +335,18 @@ export function ActionBar() {
         <div>
           <button className="btn fire" onClick={() => (runtime.input.fire = true)}>
             👐 {L("Empurrar", "Push")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (scenarioId === "queda") {
+    return (
+      <div className="actionbar">
+        <div>
+          <button className="btn fire" onClick={() => (runtime.input.fire = true)}>
+            ⬇️ {L("Soltar", "Drop")}
           </button>
         </div>
       </div>

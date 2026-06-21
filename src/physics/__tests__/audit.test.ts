@@ -1,5 +1,5 @@
 /**
- * Auditoria de Realismo — Testes numéricos contra valores reais.
+ * Auditoria de Realismo - Testes numéricos contra valores reais.
  *
  * Cada teste simula um cenário concreto e compara o resultado com o
  * valor esperado da física real (fontes: NASA, NIST, livros de mecânica,
@@ -14,6 +14,7 @@ import { airplane, waveDragCd } from "../scenarios/airplane";
 import { rocket } from "../scenarios/rocket";
 import { revolver, BARRIER_MATERIALS, penetrationDepth, residualVel } from "../scenarios/revolver";
 import { skaters } from "../scenarios/skaters";
+import { freefall } from "../scenarios/freefall";
 import { emptyControls } from "../types";
 
 // Utilitário: roda N passos e retorna estado
@@ -616,6 +617,76 @@ describe("Conservação de Energia", () => {
     const totalEnergy = ec + ep + s.eDrag;
     const diff = Math.abs(s.eEngine - totalEnergy);
     expect(diff / (s.eEngine + 1)).toBeLessThan(0.1); // Pode ter erro de integração
+  });
+});
+
+// =====================================================================
+// 14. QUEDA LIVRE / ENERGIA CINÉTICA
+// =====================================================================
+describe("Queda livre / Energia cinética", () => {
+  function drop(env: any, params: any, dt = 0.002, maxIter = 300000) {
+    const s = freefall.init(env, params);
+    freefall.step(s, env, params, { ...emptyControls(), fire: true }, dt);
+    let i = 0;
+    while (!s.landed && i < maxIter) {
+      freefall.step(s, env, params, emptyControls(), dt);
+      i++;
+    }
+    return s;
+  }
+
+  it("Lua (sem ar): v_impacto = √(2·g·h) e E_cin no impacto = m·g·h", () => {
+    const env = makeEnvironment("lua", "asfalto"); // g=1.62, ar=0 → sem arrasto
+    const params = { altura: 50, massa: 10, velInicial: 0, forma: 0 };
+    const s = drop(env, params);
+    const vExpected = Math.sqrt(2 * env.g * 50);
+    expect(Math.abs(s.impactV - vExpected) / vExpected).toBeLessThan(0.02);
+    const peInicial = 10 * env.g * 50;
+    expect(Math.abs(s.impactKE - peInicial) / peInicial).toBeLessThan(0.02);
+  });
+
+  it("Com ar (Terra): a energia se conserva (m·g·h = E_cin impacto + E_dissipada)", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { altura: 200, massa: 5, velInicial: 0, forma: 0 };
+    const s = drop(env, params, 0.002);
+    const e0 = 5 * env.g * 200;
+    const total = s.impactKE + s.eDrag;
+    expect(Math.abs(e0 - total) / e0).toBeLessThan(0.05);
+  });
+
+  it("Velocidade terminal: bola leve cai bem mais devagar que no vácuo (arrasto)", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { altura: 1000, massa: 1, velInicial: 0, forma: 0 };
+    const s = drop(env, params, 0.004);
+    const vVacuo = Math.sqrt(2 * env.g * 1000); // ~140 m/s sem ar
+    expect(s.impactV).toBeLessThan(vVacuo * 0.7); // arrasto reduz bastante
+    expect(s.impactV).toBeGreaterThan(20);
+  });
+
+  it("Forma importa: o aerodinâmico chega mais rápido que a bola (menos arrasto)", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const base = { altura: 300, massa: 2, velInicial: 0 };
+    const bola = drop(env, { ...base, forma: 0 });
+    const aero = drop(env, { ...base, forma: 3 });
+    expect(aero.impactV).toBeGreaterThan(bola.impactV);
+  });
+
+  it("Meteoro: massa e velocidade altas → energia enorme, sem NaN", () => {
+    const env = makeEnvironment("terra", "asfalto");
+    const params = { altura: 100, massa: 100000, velInicial: 20000, forma: 0 };
+    const s = drop(env, params, 0.001);
+    expect(Number.isFinite(s.impactKE)).toBe(true);
+    expect(s.impactKE).toBeGreaterThan(1e13); // > ~2 kton de TNT
+  });
+
+  it("Sem gravidade (vácuo de verdade): o objeto não cai", () => {
+    const env = makeEnvironment("vacuo", "asfalto"); // g=0
+    const params = { altura: 50, massa: 10, velInicial: 0, forma: 0 };
+    const s = freefall.init(env, params);
+    freefall.step(s, env, params, { ...emptyControls(), fire: true }, 0.01);
+    for (let i = 0; i < 500; i++) freefall.step(s, env, params, emptyControls(), 0.01);
+    expect(s.landed).toBe(false);
+    expect(s.y).toBeCloseTo(50, 1);
   });
 });
 

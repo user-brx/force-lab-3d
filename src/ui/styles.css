@@ -195,6 +195,10 @@ body,
   gap: 12px;
   align-self: flex-start;
   padding-right: 4px; /* espaço para o scrollbar */
+  /* o painel precisa capturar o toque e rolar na vertical (iPad/iPhone) */
+  pointer-events: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Scrollbar moderno para o painel esquerdo */
@@ -223,6 +227,9 @@ body,
   gap: 12px;
   margin-left: auto;
   padding-left: 4px;
+  pointer-events: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 .right-col::-webkit-scrollbar {
   width: 6px;

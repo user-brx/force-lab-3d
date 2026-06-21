@@ -134,17 +134,41 @@ function fmtDepth(m: number): { value: string; unit: string } {
   return { value: fmt(m, 2), unit: "m" };
 }
 
-/** Efeitos visuais do impacto na barreira (clarão + poeira/fragmentos). */
+/** Efeitos visuais do impacto na barreira, por tipo de material. */
 function spawnImpact(s: RevolverState, mat: BarrierMaterial, at: Vec3, perforated: boolean) {
-  s.events.push({ at, kind: "blast", color: "#ffd27a", maxRadius: 1.2, life: 0.3 }); // clarão
-  const puffs = mat.brittle ? 3 : 2;
+  const metal = mat.id === "aco";
+  const ground = vec(at.x, 0.05, 0);
+
+  // Clarão duplo de impacto (núcleo branco quente + halo da cor do material).
+  s.events.push({ at, kind: "blast", color: "#ffffff", maxRadius: metal ? 1.6 : 1.2, life: 0.18 });
+  s.events.push({ at, kind: "blast", color: metal ? "#ffd27a" : "#ffe6a8", maxRadius: metal ? 3.0 : 2.2, life: 0.32 });
+  // Nuvem do material expandindo (cor do material), em várias camadas.
+  const puffs = mat.brittle ? 4 : 3;
   for (let i = 0; i < puffs; i++) {
-    s.events.push({ at, kind: "blast", color: mat.color, maxRadius: 1.4 + i * 0.5, life: 0.5 });
+    s.events.push({ at, kind: "blast", color: mat.color, maxRadius: 2.0 + i * 0.8, life: 0.6 + i * 0.08 });
   }
-  // Fragmentos para trás (lado da entrada).
-  s.particleQueue.push({ at, dir: vec(-1, 0.35, 0), speed: 9, spread: 0.7, count: mat.brittle ? 14 : 9, kind: "dust" });
+  // Anel de choque no chão, na base da barreira.
+  s.events.push({ at: ground, kind: "ring", color: mat.color, maxRadius: 3.6, life: 0.8 });
+
+  if (metal) {
+    // Aço: leque de faíscas quentes, rápidas e brilhantes, para trás e para cima.
+    s.particleQueue.push({ at, dir: vec(-1, 0.5, 0), speed: 30, spread: 1.0, count: 26, kind: "exhaust" });
+    s.particleQueue.push({ at, dir: vec(-0.5, 1.1, 0), speed: 22, spread: 0.8, count: 14, kind: "exhaust" });
+    s.particleQueue.push({ at, dir: vec(-0.8, 0.1, 0), speed: 14, spread: 0.9, count: 10, kind: "smoke" });
+  } else if (mat.brittle) {
+    // Vidro/concreto: explodem em muitos estilhaços rápidos e bem abertos + pó.
+    s.particleQueue.push({ at, dir: vec(-1, 0.45, 0), speed: 20, spread: 1.2, count: 30, kind: "dust" });
+    s.particleQueue.push({ at, dir: vec(-0.3, 1.0, 0), speed: 12, spread: 1.0, count: 16, kind: "smoke" });
+  } else {
+    // Madeira/areia/gel: lascas e poeira + fumaça que fica no ar.
+    s.particleQueue.push({ at, dir: vec(-1, 0.4, 0), speed: 13, spread: 0.8, count: 20, kind: "dust" });
+    s.particleQueue.push({ at, dir: vec(-0.4, 0.8, 0), speed: 6, spread: 0.7, count: 12, kind: "smoke" });
+  }
+
   // Spall para frente (lado da saída), só se atravessou.
-  if (perforated) s.particleQueue.push({ at, dir: vec(1, 0.2, 0), speed: 11, spread: 0.5, count: mat.brittle ? 12 : 7, kind: "dust" });
+  if (perforated) {
+    s.particleQueue.push({ at, dir: vec(1, 0.3, 0), speed: metal ? 24 : 16, spread: 0.6, count: mat.brittle ? 20 : 12, kind: metal ? "exhaust" : "dust" });
+  }
 }
 
 export const revolver: Scenario<RevolverState> = {
@@ -163,7 +187,7 @@ export const revolver: Scenario<RevolverState> = {
     barreira:  { label: "Barreira",  labelEn: "Barrier",   min: 0, max: 1, step: 1, default: 1, unit: "" },
     material:  { label: "Material",  labelEn: "Material",  min: 0, max: BARRIER_MATERIALS.length - 1, step: 1, default: 0, unit: "" },
     espessura: { label: "Espessura", labelEn: "Thickness", min: 1, max: 50, step: 1, default: 10, unit: "cm" },
-    distancia: { label: "Distância", labelEn: "Distance",  min: 5, max: 150, step: 5, default: 25, unit: "m" },
+    distancia: { label: "Distância", labelEn: "Distance",  min: 5, max: 150, step: 5, default: 15, unit: "m" },
   },
 
   init: () => ({
@@ -369,7 +393,8 @@ export const revolver: Scenario<RevolverState> = {
     const comY = 0.40 + s.gunY;
     const bodies: SceneView["bodies"] = [{ id: "gun", position: vec(s.gunX, comY, 0), rotation: s.gunAngle }];
     s.bullets.forEach((b, i) => {
-      bodies.push({ id: `bullet${i}`, position: vec(b.x, b.y, 0), rotation: Math.atan2(b.vy, b.vx) });
+      // inclui o desvio lateral z (Coriolis) na posição renderizada
+      bodies.push({ id: `bullet${i}`, position: vec(b.x, b.y, b.z || 0), rotation: Math.atan2(b.vy, b.vx) });
     });
     const newest = s.bullets[s.bullets.length - 1]; // bala mais recente (a que a Matrix segue)
     const hasBullets = s.bullets.length > 0;
@@ -416,7 +441,7 @@ export const revolver: Scenario<RevolverState> = {
         const b = s.bullets[i];
         const sp = Math.hypot(b.vx, b.vy, b.vz || 0);
         labels.push({
-          at: vec(b.x, b.y, 0),
+          at: vec(b.x, b.y, b.z || 0),
           title: `${fmt(sp, 0)} m/s`,
           subtitle: `${fmt(b.dist, 0)} m · Mach ${fmt(env.soundSpeed > 0 ? sp / env.soundSpeed : 0, 1)}`,
           color: "#e7c96a",
@@ -498,11 +523,15 @@ export const revolver: Scenario<RevolverState> = {
       ],
       shocks,
       // Câmera: 1º trava na parede após impacto (foco); senão segue a bala no
-      // Matrix; senão volta para a arma. O foco mantém a câmera lenta para ver o
-      // resultado mesmo depois de a bala cravar e sumir.
+      // Matrix; com a barreira ligada, em repouso enquadra o meio do corredor
+      // arma → parede (para a parede aparecer junto); senão volta para a arma.
       cameraTarget: s.focusT > 0 && s.focusAt
         ? s.focusAt
-        : (s.matrixActive && newest) ? vec(newest.x, newest.y, 0) : vec(s.gunX, 0.7 + s.gunY, 0),
+        : (s.matrixActive && newest)
+          ? vec(newest.x, newest.y, 0)
+          : (params.barreira ?? 1) >= 0.5
+            ? vec(Math.min(params.distancia ?? 15, 35) / 2, 0.6, 0)
+            : vec(s.gunX, 0.7 + s.gunY, 0),
       timeScale: (s.focusT > 0 && s.focusAt) || (s.matrixActive && newest) ? 0.08 : 1,
     };
   },

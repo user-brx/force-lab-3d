@@ -1,7 +1,7 @@
 import { forwardRef, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { BARRIER_CENTER_Y, BARRIER_HEIGHT, BARRIER_MATERIALS, PLANETS } from "../physics";
+import { BARRIER_HEIGHT, BARRIER_MATERIALS, PLANETS } from "../physics";
 import { useStore } from "../state/store";
 import { runtime } from "./runtime";
 
@@ -19,10 +19,12 @@ interface HumanoidProps {
   bodyId?: string;
   /** anima as pernas/braços andando. */
   walk?: boolean;
+  /** vira o boneco para -x (em vez do padrão +x) - usado para se olharem. */
+  faceLeft?: boolean;
 }
 
 export const Humanoid = forwardRef<THREE.Group, HumanoidProps>(
-  ({ color = "#4d9fff", skates = false, bodyId, walk = false }, ref) => {
+  ({ color = "#4d9fff", skates = false, bodyId, walk = false, faceLeft = false }, ref) => {
     const inner = useRef<THREE.Group>(null);
     const legL = useRef<THREE.Group>(null);
     const legR = useRef<THREE.Group>(null);
@@ -44,7 +46,7 @@ export const Humanoid = forwardRef<THREE.Group, HumanoidProps>(
 
     return (
       <group ref={ref}>
-        <group ref={inner} rotation={[0, Math.PI / 2, 0]}>
+        <group ref={inner} rotation={[0, faceLeft ? -Math.PI / 2 : Math.PI / 2, 0]}>
           {/* perna esquerda (pivô no quadril) */}
           <group ref={legL} position={[-0.13, 0.85, 0]}>
             <mesh position={[0, -0.38, 0]} castShadow>
@@ -178,17 +180,29 @@ CarModel.displayName = "CarModel";
 export const RocketModel = forwardRef<THREE.Group, object>((_, ref) => {
   const diamonds = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.PointLight>(null);
+  const flame = useRef<THREE.Group>(null);
   const planetAir = useStore((s) => PLANETS[s.planetId].airDensity);
   const planetSH = useStore((s) => PLANETS[s.planetId].scaleHeight);
 
   useFrame(({ clock }) => {
     const firing = (runtime.view?.particles?.length ?? 0) > 0;
+    const alt = Math.max(0, runtime.view?.cameraTarget?.y ?? 0);
+    const localRho = planetAir * Math.exp(-alt / planetSH);
+    const vacuum = localRho <= 0.05;
+
     if (glowRef.current) {
       glowRef.current.intensity = firing ? 3 + Math.sin(clock.elapsedTime * 20) * 1 : 0;
     }
+    // Chama do motor: pisca rápido; no vácuo o jato se abre (sem contrapressão do ar).
+    if (flame.current) {
+      flame.current.visible = firing;
+      if (firing) {
+        const flick = 0.82 + Math.sin(clock.elapsedTime * 34) * 0.18;
+        const wide = vacuum ? 1.9 : 1.0;
+        flame.current.scale.set(wide, flick * (vacuum ? 1.25 : 1), wide);
+      }
+    }
     if (!diamonds.current) return;
-    const alt = Math.max(0, runtime.view?.cameraTarget?.y ?? 0);
-    const localRho = planetAir * Math.exp(-alt / planetSH);
     diamonds.current.visible = firing && localRho > 0.25;
     if (diamonds.current.visible) {
       const p = 1 + Math.sin(clock.elapsedTime * 30) * 0.08;
@@ -235,6 +249,19 @@ export const RocketModel = forwardRef<THREE.Group, object>((_, ref) => {
         <meshStandardMaterial color="#d8443a" metalness={0.3} roughness={0.45} />
       </mesh>
     ))}
+    {/* Chama do motor: núcleo branco-azulado + envelope laranja (aditivo). */}
+    <group ref={flame} position={[0, -3.95, 0]} visible={false}>
+      {/* envelope externo (laranja) */}
+      <mesh position={[0, -1.5, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.5, 3.0, 24, 1, true]} />
+        <meshBasicMaterial color="#ff7a2c" transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      {/* núcleo quente (branco-azulado) */}
+      <mesh position={[0, -0.9, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.28, 2.0, 20, 1, true]} />
+        <meshBasicMaterial color="#cfe6ff" transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
     {/* Luz pontual para simular o brilho do motor */}
     <pointLight
       ref={glowRef}
@@ -362,21 +389,95 @@ export function BarrierModel() {
   if (!on) return null;
   const mat = BARRIER_MATERIALS[matIdx] ?? BARRIER_MATERIALS[0];
   const translucent = mat.id === "vidro" || mat.id === "gel";
+  const depth = 2.2;
+  const slabH = BARRIER_HEIGHT - 0.2; // deixa espaço para a base de concreto
+  const slabCY = 0.2 + slabH / 2; // centro da placa, acima da base
   return (
-    <group position={[D + T / 2, BARRIER_CENTER_Y, 0]}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[T, BARRIER_HEIGHT, 2.2]} />
+    <group position={[D + T / 2, 0, 0]}>
+      {/* base / plinto de concreto */}
+      <mesh position={[0, 0.1, 0]} castShadow receiveShadow>
+        <boxGeometry args={[Math.max(T + 0.3, 0.5), 0.2, depth + 0.4]} />
+        <meshStandardMaterial color="#3a3f4a" roughness={0.92} metalness={0.1} />
+      </mesh>
+      {/* placa do material */}
+      <mesh position={[0, slabCY, 0]} castShadow receiveShadow>
+        <boxGeometry args={[T, slabH, depth]} />
         <meshStandardMaterial
           color={mat.color}
-          metalness={mat.id === "aco" ? 0.8 : 0.05}
-          roughness={mat.id === "aco" ? 0.35 : mat.id === "vidro" ? 0.08 : 0.85}
+          metalness={mat.id === "aco" ? 0.85 : 0.05}
+          roughness={mat.id === "aco" ? 0.3 : mat.id === "vidro" ? 0.06 : 0.85}
           transparent={translucent}
-          opacity={mat.id === "vidro" ? 0.35 : mat.id === "gel" ? 0.55 : 1}
+          opacity={mat.id === "vidro" ? 0.32 : mat.id === "gel" ? 0.5 : 1}
         />
       </mesh>
+      {/* postes laterais de suporte (aço escuro) */}
+      {([-(depth / 2 + 0.08), depth / 2 + 0.08] as number[]).map((z, i) => (
+        <mesh key={i} position={[0, slabCY, z]} castShadow>
+          <boxGeometry args={[Math.max(T, 0.08) + 0.06, slabH + 0.1, 0.1]} />
+          <meshStandardMaterial color="#2a2e38" roughness={0.6} metalness={0.5} />
+        </mesh>
+      ))}
+      {/* rebites na chapa de aço */}
+      {mat.id === "aco" &&
+        ([-0.5, 0.5] as number[]).flatMap((yo, i) =>
+          ([-0.7, 0.7] as number[]).map((zo, j) => (
+            <mesh key={`${i}-${j}`} position={[T / 2 + 0.012, slabCY + yo, zo]} rotation={[0, 0, Math.PI / 2]} castShadow>
+              <cylinderGeometry args={[0.05, 0.05, 0.04, 10]} />
+              <meshStandardMaterial color="#cdd4e0" metalness={0.9} roughness={0.25} />
+            </mesh>
+          )),
+        )}
     </group>
   );
 }
+
+// Objeto que cai (cenário Queda/Energia). A forma vem do store; a posição é
+// definida pela física (corpo "fallobj"). Tamanho visual fixo para sempre aparecer.
+export const FallingObjectModel = forwardRef<THREE.Group, object>((_, ref) => {
+  const forma = useStore((s) => Math.round(s.params.queda?.forma ?? 0));
+  return (
+    <group ref={ref}>
+      {forma === 1 ? (
+        // cubo
+        <mesh castShadow>
+          <boxGeometry args={[0.7, 0.7, 0.7]} />
+          <meshStandardMaterial color="#b08d57" roughness={0.7} metalness={0.2} />
+        </mesh>
+      ) : forma === 2 ? (
+        // lança (ponta para baixo)
+        <>
+          <mesh position={[0, -0.5, 0]} rotation={[Math.PI, 0, 0]} castShadow>
+            <coneGeometry args={[0.13, 0.7, 16]} />
+            <meshStandardMaterial color="#cdd4e0" metalness={0.75} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0.35, 0]} castShadow>
+            <cylinderGeometry args={[0.06, 0.06, 1.0, 12]} />
+            <meshStandardMaterial color="#6b4a2a" roughness={0.7} />
+          </mesh>
+        </>
+      ) : forma === 3 ? (
+        // gota / aerodinâmico (hemisfério em cima, cone afilado para baixo)
+        <>
+          <mesh position={[0, 0.12, 0]} castShadow>
+            <sphereGeometry args={[0.34, 20, 16]} />
+            <meshStandardMaterial color="#7fd4ff" metalness={0.4} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, -0.55, 0]} rotation={[Math.PI, 0, 0]} castShadow>
+            <coneGeometry args={[0.34, 1.0, 20]} />
+            <meshStandardMaterial color="#7fd4ff" metalness={0.4} roughness={0.2} />
+          </mesh>
+        </>
+      ) : (
+        // bola
+        <mesh castShadow>
+          <sphereGeometry args={[0.4, 24, 24]} />
+          <meshStandardMaterial color="#9aa7bd" roughness={0.6} metalness={0.2} />
+        </mesh>
+      )}
+    </group>
+  );
+});
+FallingObjectModel.displayName = "FallingObjectModel";
 
 export const AirplaneModel = forwardRef<THREE.Group, { jet?: boolean }>(({ jet = false }, ref) => {
   const prop = useRef<THREE.Group>(null);

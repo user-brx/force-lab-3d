@@ -23,6 +23,7 @@ const CAM_OFFSET: Record<string, [number, number, number]> = {
   // sai "para frente" (para o fundo da cena) e dá para acompanhar o tiro.
   revolver: [-6, 2.2, 3.5],
   patinadores: [4, 2.2, 9],
+  queda: [5, 1, 9],
 };
 
 const SPACE = new THREE.Color("#05070d");
@@ -41,17 +42,37 @@ function CameraRig() {
   const planetId = useStore((s) => s.planetId);
   const resetToken = useStore((s) => s.resetToken);
   const autoRotate = useStore((s) => s.autoRotate);
+  const revolverParams = useStore((s) => s.params.revolver);
+  const quedaParams = useStore((s) => s.params.queda);
 
   const airless = PLANETS[planetId].airDensity < 0.05;
 
   useEffect(() => {
-    const off = CAM_OFFSET[scenarioId] ?? [5, 2.5, 9];
     const c = controls.current;
     if (!c) return;
+    // Queda/Energia: começa enquadrando o objeto lá no alto (na altura escolhida).
+    if (scenarioId === "queda") {
+      const hh = Math.max(2, quedaParams?.altura ?? 50);
+      c.target.set(0, hh, 0);
+      camera.position.set(5, hh + 2, 9);
+      c.update();
+      return;
+    }
+    // Fuzil .50 com barreira ligada: enquadra TODO o corredor arma → barreira,
+    // para a parede aparecer junto com o fuzil ao ativar.
+    if (scenarioId === "revolver" && (revolverParams?.barreira ?? 1) >= 0.5) {
+      const D = Math.min(revolverParams?.distancia ?? 15, 35);
+      const back = D * 0.7 + 6;
+      c.target.set(D / 2, 0.6, 0);
+      camera.position.set(-back * 0.4, 0.6 + back * 0.35, back * 0.6);
+      c.update();
+      return;
+    }
+    const off = CAM_OFFSET[scenarioId] ?? [5, 2.5, 9];
     c.target.set(0, scenarioId === "foguete" ? 2 : 0.9, 0);
     camera.position.set(off[0], (c.target.y ?? 1) + off[1], off[2]);
     c.update();
-  }, [scenarioId, resetToken, camera]);
+  }, [scenarioId, resetToken, camera, revolverParams, quedaParams]);
 
   useFrame((_, dt) => {
     const c = controls.current;
