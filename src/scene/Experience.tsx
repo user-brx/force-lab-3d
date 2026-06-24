@@ -189,21 +189,21 @@ function SpaceReference() {
   // foguete passa por eles, deixando claro que ESTÁ se movendo (e o gás, recuando).
   const markers = [];
   for (let i = 0; i < 40; i++) {
-    const bright = i % 5 === 0; // anel mais forte a cada 5
+    const bright = i % 5 === 0; // anel um pouco mais visível a cada 5
     markers.push(
       <mesh key={`r${i}`} position={[0, i * 10, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[7.4, bright ? 8.2 : 7.8, 72]} />
-        <meshBasicMaterial color={bright ? "#7fb0e8" : "#3f6492"} transparent opacity={bright ? 0.55 : 0.35} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={bright ? "#5a82b4" : "#34527a"} transparent opacity={bright ? 0.24 : 0.13} side={THREE.DoubleSide} />
       </mesh>,
     );
   }
-  // postes laterais com marcas curtas (referência vertical)
+  // postes laterais com marcas curtas (referência vertical, bem discretas)
   for (const x of [-8, 8]) {
     for (let i = 0; i < 60; i++) {
       markers.push(
         <mesh key={`p${x}_${i}`} position={[x, i * 6 + 3, 0]}>
           <boxGeometry args={[0.5, 0.12, 0.12]} />
-          <meshBasicMaterial color="#5f86b8" transparent opacity={0.5} />
+          <meshBasicMaterial color="#4a6b95" transparent opacity={0.22} />
         </mesh>,
       );
     }
@@ -215,16 +215,18 @@ function SpaceReference() {
 // geram o mapa de reflexão uma única vez (frames={1}). Antes usava HDRI de CDN,
 // o que quebrava o offline e causava flicker no iPhone a cada troca de planeta.
 function DynamicEnvironment() {
+  // Reflexos suaves e uniformes: painéis fracos para nenhum deles "estourar" os
+  // objetos quando passam na frente (o painel-chave era forte demais e cegava).
   return (
-    <Environment resolution={256} frames={1} environmentIntensity={0.55}>
-      {/* teto frio amplo (luz-chave) */}
-      <Lightformer intensity={1.4} color="#cfe0ff" position={[0, 6, -8]} scale={[14, 10, 1]} />
+    <Environment resolution={256} frames={1} environmentIntensity={0.4}>
+      {/* teto frio amplo (luz-chave, agora suave) */}
+      <Lightformer intensity={0.6} color="#cfe0ff" position={[0, 6, -8]} scale={[14, 10, 1]} />
       {/* preenchimento lateral esquerdo */}
-      <Lightformer intensity={0.7} color="#ffffff" rotation={[0, Math.PI / 2, 0]} position={[-6, 1, 0]} scale={[12, 6, 1]} />
+      <Lightformer intensity={0.45} color="#ffffff" rotation={[0, Math.PI / 2, 0]} position={[-6, 1, 0]} scale={[12, 6, 1]} />
       {/* preenchimento lateral direito */}
-      <Lightformer intensity={0.7} color="#ffffff" rotation={[0, -Math.PI / 2, 0]} position={[6, 1, 0]} scale={[12, 6, 1]} />
+      <Lightformer intensity={0.45} color="#ffffff" rotation={[0, -Math.PI / 2, 0]} position={[6, 1, 0]} scale={[12, 6, 1]} />
       {/* realce frontal azulado */}
-      <Lightformer intensity={0.5} color="#a8c6ff" rotation={[Math.PI / 2, 0, 0]} position={[0, 4, 6]} scale={[10, 10, 1]} />
+      <Lightformer intensity={0.35} color="#a8c6ff" rotation={[Math.PI / 2, 0, 0]} position={[0, 4, 6]} scale={[10, 10, 1]} />
       {/* base escura para contraste embaixo */}
       <Lightformer intensity={0.25} color="#1a2740" rotation={[-Math.PI / 2, 0, 0]} position={[0, -4, 0]} scale={[14, 14, 1]} />
     </Environment>
@@ -238,7 +240,7 @@ export function Experience() {
       <ambientLight intensity={0.25} />
       <directionalLight
         position={[18, 24, 12]}
-        intensity={2.4}
+        intensity={1.7}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0004}
@@ -263,7 +265,7 @@ export function Experience() {
       <CameraRig />
 
       <EffectComposer enableNormalPass={false} multisampling={4}>
-        <Bloom intensity={0.6} luminanceThreshold={0.3} luminanceSmoothing={0.5} mipmapBlur />
+        <Bloom intensity={0.45} luminanceThreshold={0.45} luminanceSmoothing={0.5} mipmapBlur />
         <Vignette eskil={false} offset={0.25} darkness={0.7} />
       </EffectComposer>
     </>

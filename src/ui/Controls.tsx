@@ -44,7 +44,7 @@ export function TopBar() {
       </div>
       <a
         className="langtoggle"
-        href="docs/"
+        href={lang === "en" ? "docs/en/" : "docs/"}
         target="_blank"
         rel="noopener"
         title={L("Guia do professor", "Teacher's guide")}

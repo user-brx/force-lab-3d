@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rocket · Teacher's Guide</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">&larr; Index</a> · <a class="back" href="../../">Simulator</a></p>
+      <h1>🚀 Rocket</h1>
+      <p class="sub">Thrust by mass expulsion, the Tsiolkovsky equation, TWR and specific impulse.</p>
+    </header>
+
+    <h2>The idea</h2>
+    <p>Thrust is born <em>inside</em> the engine: gas is thrown one way and the rocket goes the other with the same force
+      (3rd law / conservation of momentum) - exactly like the rifle. That's why the rocket works (better!) in <strong>vacuum</strong>:
+      it doesn't push against the air, it pushes the very gas it ejects.</p>
+
+    <h2>The formulas</h2>
+    <div class="formula">
+      F<sub>thrust</sub> = ṁ · v<sub>e</sub> = ṁ · I<sub>sp</sub> · g₀
+      <span class="where">ṁ = mass flow (kg/s); v<sub>e</sub> = exhaust velocity; I<sub>sp</sub> = specific impulse (s).</span>
+    </div>
+    <div class="formula">
+      Δv = I<sub>sp</sub> · g₀ · ln( m₀ / m<sub>f</sub> )
+      <span class="where">Tsiolkovsky rocket equation: m₀ = initial mass (with fuel), m<sub>f</sub> = dry mass.</span>
+    </div>
+    <div class="formula">
+      TWR = F<sub>thrust</sub> / (m · g)
+      <span class="where">Thrust-to-weight ratio. It only lifts off if TWR &gt; 1. On the Moon (lower g) it lifts with thrust that wouldn't on Earth.</span>
+    </div>
+    <div class="formula">
+      I<sub>sp</sub>(h) = I<sub>sp,vac</sub> − (I<sub>sp,vac</sub> − I<sub>sp,sea-level</sub>)·(ρ/ρ₀)
+      <span class="where">Thrust grows ~10-20 % in vacuum (no back-pressure from air at the nozzle exit).</span>
+    </div>
+
+    <h2>Real values used</h2>
+    <table>
+      <tr><th>Parameter</th><th>Value</th><th>Note</th></tr>
+      <tr><td>I<sub>sp</sub> vacuum</td><td>311 s</td><td>Merlin 1D class (kerosene/LOX)</td></tr>
+      <tr><td>I<sub>sp</sub> sea level</td><td>260 s</td><td>lower due to air pressure</td></tr>
+      <tr><td>v<sub>e</sub> in vacuum</td><td>311 × 9.81 ≈ 3050 m/s</td><td>exhaust velocity</td></tr>
+      <tr><td>Gravity with altitude</td><td>g(h)=g·(R/(R+h))²</td><td>drops ~3 % at 100 km</td></tr>
+    </table>
+
+    <h2 id="ex">Worked example</h2>
+    <div class="card example">
+      <p><strong>Mass flow</strong> for 30 kN at sea level: ṁ = F/(I<sub>sp</sub>·g₀) = 30000/(260·9.81) ≈ <strong>11.8 kg/s</strong>.</p>
+      <p><strong>Δv in vacuum</strong> with m₀ = 2000 kg and m<sub>f</sub> = 500 kg:
+        Δv = 311·9.81·ln(2000/500) = 3050·ln(4) = 3050·1.386 ≈ <strong>4228 m/s</strong>.</p>
+      <p><strong>TWR on Earth</strong> of a 2000 kg rocket with 30 kN: TWR = 30000/(2000·9.81) ≈ <strong>1.53</strong> → lifts off.
+        On the Moon (g = 1.62) the same thrust gives TWR ≈ 9.3.</p>
+    </div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>SUTTON, BIBLARZ. <em>Rocket Propulsion Elements</em> - thrust, I<sub>sp</sub>, exhaust velocity and altitude effect.</li>
+      <li>TSIOLKOVSKY, K. (1903) - the rocket equation (derived by conservation of momentum with variable mass).</li>
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentals of Physics, vol. 1</em> - Ch. 9 (Variable-mass systems and center of mass).</li>
+    </ul>
+    <footer>I<sub>sp</sub> = 260 s (sea level) is a representative, conservative value for kerosene/LOX engines.</footer>
+  </div>
+</body>
+</html>

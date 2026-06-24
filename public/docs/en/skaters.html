@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skaters · Teacher's Guide</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">&larr; Index</a> · <a class="back" href="../../">Simulator</a></p>
+      <h1>⛸️ Skaters</h1>
+      <p class="sub">Conservation of linear momentum and the link between force, mass and acceleration.</p>
+    </header>
+
+    <h2>The idea</h2>
+    <p>Two skaters push each other. The force is <strong>identical</strong> on both (3rd law), but since a = F/m, the lighter
+      one moves away faster. In an isolated system (no friction), the <strong>total momentum is conserved</strong> and stays
+      zero: the two momenta are equal and opposite. With friction (an external force), the total momentum stops being
+      conserved and both eventually stop.</p>
+
+    <h2>The formulas</h2>
+    <div class="formula">
+      F<sub>A→B</sub> = − F<sub>B→A</sub> &nbsp;&nbsp;⇒&nbsp;&nbsp; m<sub>A</sub>·v<sub>A</sub> + m<sub>B</sub>·v<sub>B</sub> = 0
+      <span class="where">Same force and same time ⇒ opposite impulses ⇒ opposite momenta that sum to zero.</span>
+    </div>
+    <div class="formula">
+      v<sub>A</sub> / v<sub>B</sub> = m<sub>B</sub> / m<sub>A</sub>
+      <span class="where">The speeds end up in the inverse ratio of the masses: the light one shoots off, the heavy one barely moves.</span>
+    </div>
+    <div class="formula">
+      Impulse: J = F·Δt = Δp
+      <span class="where">The same force over the same time gives each one the same magnitude of momentum.</span>
+    </div>
+
+    <h2 id="ex">Worked example</h2>
+    <div class="card example">
+      <p><strong>A 300 N push for 0.4 s</strong> between blue (60 kg) and red (90 kg):</p>
+      <p>Impulse = F·Δt = 300·0.4 = <strong>120 N·s</strong> on each one.</p>
+      <p>v<sub>blue</sub> = 120/60 = <strong>2.0 m/s</strong>; v<sub>red</sub> = 120/90 = <strong>1.33 m/s</strong>.</p>
+      <p>Total momentum = 60·2.0 − 90·1.33 = 120 − 120 = <strong>0</strong> ✓ (conserved, in vacuum/ice without friction).</p>
+    </div>
+
+    <div class="note">In the simulator, on ice/vacuum the total momentum stays zero "forever"; on asphalt the friction (an
+      external force) slows both and the total stops being zero - a great chance to discuss what an <em>isolated system</em> is.</div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentals of Physics, vol. 1</em> - Ch. 9 (Center of mass and linear momentum; conservation).</li>
+      <li>YOUNG, FREEDMAN. <em>University Physics (Sears & Zemansky)</em> - Ch. 8 (Momentum, impulse and collisions).</li>
+      <li>TIPLER, MOSCA. <em>Physics for Scientists and Engineers, vol. 1</em> - Ch. 8.</li>
+    </ul>
+    <footer>Conservation of momentum follows directly from Newton's 3rd law for an isolated system.</footer>
+  </div>
+</body>
+</html>

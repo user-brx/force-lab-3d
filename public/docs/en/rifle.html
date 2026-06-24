@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>.50 Rifle · Teacher's Guide</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">&larr; Index</a> · <a class="back" href="../../">Simulator</a></p>
+      <h1>🎯 .50 BMG Rifle</h1>
+      <p class="sub">Conservation of momentum (recoil), external ballistics and penetration of barriers.</p>
+    </header>
+
+    <h2>The idea</h2>
+    <p>The powder gas pushes the bullet forward and the back of the barrel backward with the <strong>same force</strong>
+      (3rd law): bullet and gun gain equal and opposite momenta that sum to zero. The <strong>muzzle brake</strong> deflects
+      part of the gas sideways, cutting the felt recoil - without violating conservation (the total impulse of bullet + gas +
+      gun is still zero).</p>
+
+    <h2>The formulas</h2>
+    <div class="formula">
+      p<sub>bullet</sub> = m<sub>b</sub>·v<sub>b</sub> = m<sub>gun</sub>·v<sub>recoil</sub>
+      <span class="where">Conservation of momentum: the gun's recoil balances the bullet's momentum.</span>
+    </div>
+    <div class="formula">
+      E<sub>k</sub> = ½·m·v² &nbsp;&nbsp;|&nbsp;&nbsp; F<sub>drag</sub> = ½·ρ·v²·C<sub>d</sub>(Mach)·A
+      <span class="where">The bullet's energy is much larger than the gun's (same p, but v² favors the light one). C<sub>d</sub> varies with Mach number.</span>
+    </div>
+    <div class="formula">
+      Bullet drop: Δy = ½·g·t²
+      <span class="where">A horizontal shot falls like any object: from 0.5 m it reaches the ground in t=√(2·0.5/g)≈0.32 s - independent of caliber.</span>
+    </div>
+    <div class="formula">
+      Penetration (Poncelet): P = m / (2·A·ρ<sub>target</sub>) · ln( 1 + ρ<sub>target</sub>·v² / R )
+      <span class="where">R = dynamic strength of the material. Exit speed through thickness T: v<sub>r</sub>² = (v²+R/ρ)·e^(−2Aρ T/m) − R/ρ.</span>
+    </div>
+
+    <h2>Real values used (.50 BMG M33)</h2>
+    <table>
+      <tr><th>Parameter</th><th>Value</th><th>Note</th></tr>
+      <tr><td>Bullet mass</td><td>42 g (661 gr)</td><td>M33 Ball projectile</td></tr>
+      <tr><td>Muzzle velocity</td><td>890 m/s</td><td>Mach 2.6 on Earth</td></tr>
+      <tr><td>Muzzle energy</td><td>~16.6 kJ</td><td>½·0.042·890²</td></tr>
+      <tr><td>Gun+bipod mass</td><td>14 kg</td><td>Barrett M82A1</td></tr>
+      <tr><td>Steel penetration</td><td>~25-30 mm</td><td>matches real data</td></tr>
+    </table>
+
+    <h2 id="ex">Worked example</h2>
+    <div class="card example">
+      <p><strong>Bullet momentum:</strong> p = 0.042·890 = <strong>37.4 kg·m/s</strong>.</p>
+      <p><strong>Recoil without brake:</strong> v = p/m<sub>gun</sub> = 37.4/14 = <strong>2.67 m/s</strong>; with a muzzle brake (~38 %) ≈ 1.0 m/s.</p>
+      <p><strong>Energies:</strong> bullet ½·0.042·890² ≈ 16.6 kJ; gun ½·14·2.67² ≈ 50 J - the bullet carries ~300× more energy
+        even though the momentum is the same (because E ∝ v²).</p>
+    </div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentals of Physics, vol. 1</em> - Ch. 9 (Linear momentum, impulse and collisions).</li>
+      <li>McCOY, R. <em>Modern Exterior Ballistics</em> - Mach-dependent drag and projectile trajectories.</li>
+      <li>PONCELET, J.-V. - penetration resistance law (static term + inertial ρv² term).</li>
+    </ul>
+    <footer>The Poncelet penetration model is calibrated to reproduce the real .50 BMG penetration in each material.</footer>
+  </div>
+</body>
+</html>

@@ -15,6 +15,7 @@ interface FallState {
   t: number; // tempo de queda (s)
   dropped: boolean;
   landed: boolean;
+  landedT: number; // tempo desde o impacto (s) - limita os efeitos pós-impacto
   eDrag: number; // energia dissipada por arrasto (J)
   impactV: number; // velocidade no impacto (m/s)
   impactKE: number; // energia cinética no impacto (J)
@@ -121,6 +122,7 @@ export const freefall: Scenario<FallState> = {
     t: 0,
     dropped: false,
     landed: false,
+    landedT: 0,
     eDrag: 0,
     impactV: 0,
     impactKE: 0,
@@ -139,6 +141,7 @@ export const freefall: Scenario<FallState> = {
     if (c.fire && !s.prevFire) {
       s.dropped = true;
       s.landed = false;
+      s.landedT = 0;
       s.y = h;
       s.v = v0;
       s.t = 0;
@@ -148,7 +151,11 @@ export const freefall: Scenario<FallState> = {
     }
     s.prevFire = c.fire;
 
-    if (!s.dropped || s.landed) return;
+    if (s.landed) {
+      s.landedT += dt; // já no chão: só conta o tempo desde o impacto
+      return;
+    }
+    if (!s.dropped) return;
 
     // Arrasto do ar: F = ½·ρ·v²·Cd·A (oposto ao movimento). ρ varia com a altitude.
     const rho = env.airDensity > 0 ? airDensityAt(s.y, env.airDensity, env.scaleHeight) : 0;
@@ -162,6 +169,7 @@ export const freefall: Scenario<FallState> = {
     if (s.y <= 0) {
       s.y = 0;
       s.landed = true;
+      s.landedT = 0;
       s.impactV = s.v;
       s.impactKE = 0.5 * m * s.v * s.v;
       // Onda de choque: o tamanho cresce (em log) com a energia liberada.
@@ -265,12 +273,16 @@ export const freefall: Scenario<FallState> = {
           `The crater uses Collins, Melosh & Marcus (2005) scaling; the destruction radius uses cube-root blast ` +
           `scaling (Glasstone & Dolan). That's how a meteor digs a crater.`,
       ),
-      particles: s.landed
+      // Detritos do impacto só nos primeiros ~0,35 s (depois o objeto fica parado,
+      // sem "soltar energia" para sempre).
+      particles: s.landed && s.landedT < 0.35
         ? [
             { at: vec(0, 0.3, 0), dir: vec(0, 1, 0), speed: 10, spread: 1.3, count: 22, kind: "dust" as const },
             { at: vec(0, 0.5, 0), dir: vec(0, 1, 0), speed: 6, spread: 1.0, count: 12, kind: "smoke" as const },
           ]
-        : // rastro tipo meteoro: quanto mais rápido na atmosfera, mais brilha
+        : s.landed
+          ? []
+          : // rastro tipo meteoro: quanto mais rápido na atmosfera, mais brilha
           s.dropped && env.airDensity > 0 && speed > 80
           ? [
               {

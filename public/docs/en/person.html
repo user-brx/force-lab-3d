@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Walking person · Teacher's Guide</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">&larr; Index</a> · <a class="back" href="../../">Simulator</a></p>
+      <h1>🚶 Walking person</h1>
+      <p class="sub">Newton's laws (2nd and 3rd) and static friction.</p>
+    </header>
+
+    <h2>The idea</h2>
+    <p>Nobody pushes themselves forward alone. When you walk, your foot pushes the ground <em>backward</em>; by
+      <strong>Newton's 3rd law</strong>, the ground pushes you <em>forward</em> with the same force. That force only exists
+      because of <strong>friction</strong> between foot and ground - on ice the foot slips and there is almost no propulsion.</p>
+    <p>The force the ground returns is a <strong>static friction</strong> force: it adapts to what's needed, but has a
+      ceiling. If you ask for more than that ceiling, you slip.</p>
+
+    <h2>The formulas</h2>
+    <div class="formula">
+      F<sub>net</sub> = m · a
+      <span class="where">2nd law: acceleration is proportional to the net force and inversely proportional to mass.</span>
+    </div>
+    <div class="formula">
+      F<sub>A→B</sub> = − F<sub>B→A</sub>
+      <span class="where">3rd law: action and reaction have equal magnitude, opposite direction, on different bodies.</span>
+    </div>
+    <div class="formula">
+      f<sub>static</sub> ≤ μ<sub>s</sub> · N &nbsp;&nbsp;|&nbsp;&nbsp; f<sub>kinetic</sub> = μ<sub>k</sub> · N
+      <span class="where">N = normal force (= m·g on flat ground). If the required propulsion exceeds μ<sub>s</sub>·N, it slips and μ<sub>k</sub>·N applies.</span>
+    </div>
+    <p>The simulator also shows the "reaction on the planet": the same force goes to Earth, but since
+      a<sub>Earth</sub> = F / M<sub>Earth</sub> and M<sub>Earth</sub> ≈ 6×10²⁴ kg, the planet's acceleration is negligible (~10⁻²³ m/s²).</p>
+
+    <h2>Real values used</h2>
+    <table>
+      <tr><th>Parameter</th><th>Range / value</th><th>Note</th></tr>
+      <tr><td>Person mass</td><td>adjustable (default 70 kg)</td><td>typical adult</td></tr>
+      <tr><td>μ<sub>s</sub> / μ<sub>k</sub> asphalt</td><td>0.9 / 0.7</td><td>rubber-dry asphalt</td></tr>
+      <tr><td>μ<sub>s</sub> / μ<sub>k</sub> ice</td><td>0.1 / 0.03</td><td>that's why it slips</td></tr>
+      <tr><td>Walking speed</td><td>converges to ~1.2-1.5 m/s</td><td>matches a real human</td></tr>
+    </table>
+
+    <h2 id="ex">Worked example</h2>
+    <div class="card example">
+      <p><strong>70 kg person on asphalt.</strong> Weight = N = m·g = 70 × 9.81 = <strong>686.5 N</strong>.</p>
+      <p>Static friction ceiling = μ<sub>s</sub>·N = 0.9 × 686.5 = <strong>617.9 N</strong>. Since the typical walking muscle force
+        (a few tens of newtons) is far below that, the foot does <em>not</em> slip and all the force becomes propulsion.</p>
+      <p>On ice the ceiling drops to μ<sub>s</sub>·N = 0.1 × 686.5 = 68.6 N; asking for more makes it slip, and the propulsion
+        is limited to μ<sub>k</sub>·N = 0.03 × 686.5 ≈ <strong>20.6 N</strong>.</p>
+    </div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentals of Physics, vol. 1</em> - Ch. 5 (Newton's Laws) and Ch. 6 (Friction).</li>
+      <li>YOUNG, FREEDMAN. <em>University Physics (Sears & Zemansky)</em> - Ch. 4 and 5.</li>
+      <li>TIPLER, MOSCA. <em>Physics for Scientists and Engineers, vol. 1</em> - Ch. 4 and 5.</li>
+    </ul>
+    <footer>The formulas are Newton's laws and the Coulomb friction model, standard in any introductory course.</footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Car · Teacher's Guide</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">&larr; Index</a> · <a class="back" href="../../">Simulator</a></p>
+      <h1>🚗 Car</h1>
+      <p class="sub">Traction by friction, power curve (P = F·v) and aerodynamic drag.</p>
+    </header>
+
+    <h2>The idea</h2>
+    <p>The engine doesn't push the car directly: it spins the wheel, which pushes the ground backward by friction; by the
+      3rd law the ground pushes the car forward. The traction force has two limits: the <strong>engine power</strong> (at high
+      speed) and the <strong>available friction</strong> (at launch / on ice). If the requested force exceeds the friction,
+      the wheel <strong>spins</strong>.</p>
+
+    <h2>The formulas</h2>
+    <div class="formula">
+      P = F · v &nbsp;⇒&nbsp; F<sub>engine</sub> = P / v
+      <span class="where">With fixed power P, traction force drops as speed rises (so acceleration fades).</span>
+    </div>
+    <div class="formula">
+      F<sub>traction</sub> = min( P/v , μ<sub>s</sub>·N ) &nbsp; (else it spins: μ<sub>k</sub>·N)
+      <span class="where">At launch P/v is huge, so friction is the limit. At high speed, power is the limit.</span>
+    </div>
+    <div class="formula">
+      F<sub>drag</sub> = ½ · ρ · C<sub>d</sub> · A · v²
+      <span class="where">ρ = air density; C<sub>d</sub> = drag coefficient; A = frontal area. Grows with the square of speed.</span>
+    </div>
+    <div class="formula">
+      v<sub>max</sub> = ∛( 2·P / (ρ·C<sub>d</sub>·A) )
+      <span class="where">Top speed: when the available traction equals drag.</span>
+    </div>
+
+    <h2>Real values used</h2>
+    <table>
+      <tr><th>Parameter</th><th>Value</th><th>Note</th></tr>
+      <tr><td>C<sub>d</sub></td><td>0.30</td><td>modern hatch/sedan</td></tr>
+      <tr><td>Frontal area A</td><td>2.2 m²</td><td>passenger car</td></tr>
+      <tr><td>Rolling resistance C<sub>rr</sub></td><td>0.012</td><td>tire on asphalt</td></tr>
+      <tr><td>Power (default)</td><td>150 kW</td><td>~200 hp</td></tr>
+      <tr><td>μ<sub>s</sub>/μ<sub>k</sub> ice</td><td>0.1 / 0.03</td><td>wheelspin</td></tr>
+    </table>
+
+    <h2 id="ex">Worked example</h2>
+    <div class="card example">
+      <p><strong>Drag at 100 km/h (27.8 m/s):</strong> F = ½·1.225·0.30·2.2·27.8² ≈ <strong>312 N</strong>.</p>
+      <p><strong>Top speed (150 kW):</strong> v<sub>max</sub> = ∛(2·150000 / (1.225·0.30·2.2)) ≈ ∛(371,000) ≈ <strong>72 m/s ≈ 259 km/h</strong>.</p>
+      <p><strong>On ice (1200 kg):</strong> traction caps at μ<sub>k</sub>·N = 0.03·1200·9.81 ≈ <strong>353 N</strong> - the wheel spins without pushing.</p>
+    </div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentals of Physics, vol. 1</em> - Ch. 6 (Friction, force and motion) and Ch. 7 (Work and energy, P=F·v).</li>
+      <li>HIBBELER. <em>Engineering Mechanics: Dynamics</em> - particle kinetics; power and efficiency.</li>
+      <li>GILLESPIE. <em>Fundamentals of Vehicle Dynamics</em> (SAE) - rolling resistance and drag.</li>
+    </ul>
+    <footer>The P=F·v model with a friction ceiling is the standard description of vehicle traction.</footer>
+  </div>
+</body>
+</html>

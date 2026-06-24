@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Airplane · Teacher's Guide</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">&larr; Index</a> · <a class="back" href="../../">Simulator</a></p>
+      <h1>✈️ Airplane</h1>
+      <p class="sub">Lift, induced and parasitic drag, and the sound barrier (wave drag).</p>
+    </header>
+
+    <h2>The idea</h2>
+    <p>The propeller/turbine throws air backward and the air pushes the plane forward (3rd law). The wings deflect air
+      downward (<em>downwash</em>) and the air pushes the wings up: that's <strong>lift</strong>. Everything depends on the
+      air - without an atmosphere the plane <strong>does not fly</strong> (a direct contrast with the rocket). Near Mach 1
+      the <strong>wave drag</strong> appears, the famous "sound barrier".</p>
+
+    <h2>The formulas</h2>
+    <div class="formula">
+      L = ½ · ρ · v² · S · C<sub>L</sub> &nbsp;&nbsp; D = ½ · ρ · v² · S · C<sub>D</sub>
+      <span class="where">L = lift, D = drag; S = wing area; C<sub>L</sub>, C<sub>D</sub> = coefficients.</span>
+    </div>
+    <div class="formula">
+      C<sub>D</sub> = C<sub>D0</sub> + k·C<sub>L</sub>² + C<sub>D,wave</sub>(Mach)
+      <span class="where">Parasitic (C<sub>D0</sub>) + induced (∝ C<sub>L</sub>²) + wave drag (spikes near Mach 1).</span>
+    </div>
+    <div class="formula">
+      v<sub>stall</sub> = √( 2·m·g / (ρ·S·C<sub>L,max</sub>) )
+      <span class="where">Minimum speed for lift to equal weight. Since v ∝ 1/√ρ, in thin air (Mars) it needs far more speed.</span>
+    </div>
+    <div class="formula">
+      Mach = v / a(h) &nbsp;&nbsp;&nbsp; a(h) = a₀·√( T(h)/T₀ )
+      <span class="where">The speed of sound drops with temperature (ISA lapse rate up to the tropopause).</span>
+    </div>
+
+    <h2>Real values used</h2>
+    <table>
+      <tr><th>Parameter</th><th>Value</th><th>Note</th></tr>
+      <tr><td>Wing area S</td><td>30 m²</td><td>light aircraft</td></tr>
+      <tr><td>C<sub>L,max</sub></td><td>1.5</td><td>typical airfoil</td></tr>
+      <tr><td>C<sub>D0</sub> (parasitic)</td><td>0.03</td><td>clean</td></tr>
+      <tr><td>Induced factor k</td><td>0.045</td><td>-</td></tr>
+      <tr><td>Wave-drag peak</td><td>~0.12 at Mach ≈ 1.05</td><td>Gaussian curve (NACA 64-series airfoils)</td></tr>
+    </table>
+
+    <h2 id="ex">Worked example</h2>
+    <div class="card example">
+      <p><strong>Stall speed (3000 kg on Earth):</strong>
+        v<sub>stall</sub> = √(2·3000·9.81 / (1.225·30·1.5)) = √(58,860 / 55.1) ≈ <strong>32.7 m/s</strong> (~118 km/h).</p>
+      <p><strong>On Mars</strong> (ρ = 0.02 kg/m³) the same plane would need v ∝ 1/√ρ ≈ <strong>7.8×</strong> more speed -
+        practically impossible with normal wings. In the dense air of <strong>Venus</strong> (ρ = 65) it's the opposite: it flies almost stationary.</p>
+    </div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>ANDERSON, J. D. <em>Introduction to Flight</em> / <em>Fundamentals of Aerodynamics</em> - lift, induced drag and transonic wave drag.</li>
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentals of Physics, vol. 1</em> - fluids and the dynamic pressure equation.</li>
+      <li>ISA - <em>U.S. Standard Atmosphere 1976</em>: variation of temperature, density and speed of sound with altitude.</li>
+    </ul>
+    <footer>Wave drag is modeled as a peak around Mach 1, the behavior measured in real airfoils.</footer>
+  </div>
+</body>
+</html>

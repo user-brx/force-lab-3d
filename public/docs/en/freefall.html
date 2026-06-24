@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Free Fall / Energy · Teacher's Guide</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">&larr; Index</a> · <a class="back" href="../../">Simulator</a></p>
+      <h1>☄️ Free Fall / Kinetic energy</h1>
+      <p class="sub">Potential → kinetic energy conversion, terminal velocity and impact energy (up to meteors).</p>
+    </header>
+
+    <h2>The idea</h2>
+    <p>An object dropped from a height starts with <strong>gravitational potential</strong> energy and converts it into
+      <strong>kinetic</strong> energy as it falls. With air, part becomes heat (drag) and there is a <strong>terminal
+      velocity</strong>. On impact, the kinetic energy is released all at once - that's how a meteor digs a crater. The
+      simulator lets you choose height (up to space), mass, initial velocity and the <strong>shape</strong> (which changes drag).</p>
+
+    <h2>The formulas</h2>
+    <div class="formula">
+      E<sub>pot</sub> = m·g·h &nbsp;&nbsp;⟶&nbsp;&nbsp; E<sub>kin</sub> = ½·m·v²
+      <span class="where">Without air: ½·m·v² = m·g·h ⇒ v = √(2·g·h), independent of mass.</span>
+    </div>
+    <div class="formula">
+      v<sub>terminal</sub> = √( 2·m·g / (ρ·C<sub>d</sub>·A) )
+      <span class="where">When drag equals weight, the fall stops accelerating. Large objects (meteors) barely slow down.</span>
+    </div>
+    <div class="formula">
+      Crater (Collins 2005): D<sub>tr</sub> = 1.161·(ρ<sub>i</sub>/ρ<sub>t</sub>)<sup>1/3</sup>·L<sup>0.78</sup>·v<sup>0.44</sup>·g<sup>−0.22</sup>
+      <span class="where">L = impactor diameter; D<sub>final</sub> ≈ 1.25·D<sub>tr</sub>; depth ≈ D/5 (simple crater).</span>
+    </div>
+    <div class="formula">
+      Destruction radius: R = Z · (kg of TNT)<sup>1/3</sup>
+      <span class="where">Cube-root (Hopkinson-Cranz) scaling: Z≈9.5 m/kg<sup>1/3</sup> for severe destruction (~5 psi); ≈35 for windows (~1 psi).</span>
+    </div>
+    <div class="formula">
+      Equivalence: 1 kg of TNT = 4.184×10⁶ J &nbsp;|&nbsp; Hiroshima ≈ 6.3×10¹³ J
+      <span class="where">Lets you express the impact energy in tons of TNT or Hiroshima bombs.</span>
+    </div>
+
+    <h2>Shapes and drag coefficient</h2>
+    <table>
+      <tr><th>Shape</th><th>C<sub>d</sub></th><th>Effect</th></tr>
+      <tr><td>Ball (sphere)</td><td>0.47</td><td>reference</td></tr>
+      <tr><td>Cube</td><td>1.05</td><td>more drag, falls slower</td></tr>
+      <tr><td>Spear</td><td>0.10</td><td>small frontal area</td></tr>
+      <tr><td>Streamlined (teardrop)</td><td>0.04</td><td>minimum drag, falls fastest</td></tr>
+    </table>
+
+    <h2 id="ex">Worked example</h2>
+    <div class="card example">
+      <p><strong>10 kg rock, 50 m, no air (conceptually):</strong> v = √(2·9.81·50) = <strong>31.3 m/s</strong>;
+        E<sub>kin</sub> = m·g·h = 10·9.81·50 = <strong>4905 J ≈ 1.2 kg of TNT</strong>.</p>
+      <p><strong>A 500 t "asteroid" at 15 km/s:</strong> E = ½·500000·15000² ≈ <strong>5.6×10¹³ J ≈ 13 kton of TNT ≈ 0.9 Hiroshima</strong>.
+        Crater ≈ 280 m across, severe destruction within ~2 km, windows shattered out to ~8 km.</p>
+    </div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>HALLIDAY, RESNICK, WALKER. <em>Fundamentals of Physics, vol. 1</em> - Ch. 7 and 8 (Work, kinetic and potential energy; conservation).</li>
+      <li>COLLINS, MELOSH, MARCUS (2005). <em>Earth Impact Effects Program</em> - Meteoritics &amp; Planetary Science 40 - crater scaling.</li>
+      <li>GLASSTONE, DOLAN. <em>The Effects of Nuclear Weapons</em> - cube-root overpressure scaling (damage radii).</li>
+      <li>MELOSH, H. J. <em>Impact Cratering: A Geologic Process</em> - physics of impacts.</li>
+    </ul>
+    <footer>The crater and blast scaling laws are the ones used by planetary scientists and in weapons effects.</footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher's Guide · Force Lab 3D</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="../../">&larr; Back to the simulator</a> · <a class="back" href="../index.html">Português</a></p>
+      <h1>Teacher's Guide</h1>
+      <p class="sub">Force Lab 3D - support material for Physics classes (high school and intro to college).</p>
+    </header>
+
+    <p>Every scene in the simulator demonstrates a principle of mechanics with <strong>real physics</strong> - no made-up
+      numbers. The pages below explain, at a classroom level, <strong>where each formula comes from</strong>, which
+      <strong>real values</strong> the program uses, and include a <strong>worked example</strong> and <strong>book references</strong>.</p>
+
+    <div class="note">
+      Suggested use: project the simulator, change one parameter at a time, and ask students to predict the result before
+      dropping/firing. Then compare the prediction with the HUD (speed, forces, energy). The formulas here let you check
+      the numbers by hand.
+    </div>
+
+    <h2>Scenarios</h2>
+    <div class="grid">
+      <a class="tile" href="person.html"><div class="ico">🚶</div><div class="t">Walking person</div><div class="d">Newton's 2nd & 3rd laws, static friction</div></a>
+      <a class="tile" href="car.html"><div class="ico">🚗</div><div class="t">Car</div><div class="d">Traction by friction, power P=F·v, drag</div></a>
+      <a class="tile" href="airplane.html"><div class="ico">✈️</div><div class="t">Airplane</div><div class="d">Lift, drag, the sound barrier</div></a>
+      <a class="tile" href="rocket.html"><div class="ico">🚀</div><div class="t">Rocket</div><div class="d">Thrust, Tsiolkovsky, TWR, Isp</div></a>
+      <a class="tile" href="rifle.html"><div class="ico">🎯</div><div class="t">.50 Rifle</div><div class="d">Momentum, recoil, ballistics, penetration</div></a>
+      <a class="tile" href="skaters.html"><div class="ico">⛸️</div><div class="t">Skaters</div><div class="d">Conservation of linear momentum</div></a>
+      <a class="tile" href="freefall.html"><div class="ico">☄️</div><div class="t">Free Fall / Energy</div><div class="d">Potential and kinetic energy, impact</div></a>
+    </div>
+
+    <h2>Constants and models used across the app</h2>
+    <table>
+      <tr><th>Quantity</th><th>Value</th><th>Source</th></tr>
+      <tr><td>Standard gravity g₀</td><td>9.80665 m/s²</td><td>CODATA / BIPM</td></tr>
+      <tr><td>Universal gravitation G</td><td>6.6743×10⁻¹¹ N·m²/kg²</td><td>CODATA 2018</td></tr>
+      <tr><td>Earth mass / radius</td><td>5.972×10²⁴ kg / 6.371×10⁶ m</td><td>NASA Planetary Fact Sheet</td></tr>
+      <tr><td>Air density (sea level, 15 °C)</td><td>1.225 kg/m³</td><td>International Standard Atmosphere (ISA)</td></tr>
+      <tr><td>Speed of sound (15 °C)</td><td>340.3 m/s</td><td>ISA, a=√(γRT)</td></tr>
+      <tr><td>Gravity with altitude</td><td>g(h)=g·(R/(R+h))²</td><td>Inverse-square law</td></tr>
+      <tr><td>Air density with altitude</td><td>Layered ISA model</td><td>ISA (troposphere/tropopause/stratosphere)</td></tr>
+    </table>
+
+    <h2>To go deeper</h2>
+    <p>📄 <a href="audit.html">Physical Realism Audit Report</a> - a detailed analysis of each file, formula and scene
+      against real data (NASA, CODATA, ISA, ballistics), with tables and a per-module verdict.</p>
+
+    <footer>
+      Force Lab 3D · built for teaching Physics. Planetary values come from NASA; the constants, from CODATA.
+      The formulas of each scene are referenced on the specific pages.
+    </footer>
+  </div>
+</body>
+</html>

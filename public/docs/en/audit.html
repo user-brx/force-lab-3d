@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Physical Realism Audit · Teacher's Guide</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="sub"><a class="back" href="index.html">&larr; Index</a> · <a class="back" href="../../">Simulator</a> · <a class="back" href="../audit.html">Português</a></p>
+      <h1>🔬 Physical Realism Audit</h1>
+      <p class="sub">Every formula and value compared with real data. Principle: <strong>never invent physics</strong>.</p>
+    </header>
+
+    <div class="note">Overall result: <strong>136 automated tests passing</strong> (<code>npx vitest run</code>), across two
+      files - <code>physics.test.ts</code> (analytic solution) and <code>audit.test.ts</code> (real values from NASA, CODATA,
+      ISA and ballistics). No scene produces NaN/Infinity on any planet (smoke test).</div>
+
+    <h2>Constants vs. references</h2>
+    <table>
+      <tr><th>Quantity</th><th>In the app</th><th>Reference</th><th>✓</th></tr>
+      <tr><td>g₀</td><td>9.80665 m/s²</td><td>CODATA / BIPM</td><td>✓</td></tr>
+      <tr><td>Universal G</td><td>6.6743×10⁻¹¹</td><td>CODATA 2018</td><td>✓</td></tr>
+      <tr><td>Earth mass</td><td>5.972×10²⁴ kg</td><td>NASA</td><td>✓</td></tr>
+      <tr><td>Earth radius</td><td>6.371×10⁶ m</td><td>NASA</td><td>✓</td></tr>
+      <tr><td>g at ~400 km (ISS)</td><td>8.69 m/s²</td><td>NASA: 8.69</td><td>✓</td></tr>
+      <tr><td>air ρ at 11 km</td><td>0.364 kg/m³</td><td>ISA: 0.3639</td><td>✓</td></tr>
+      <tr><td>sound at 11 km</td><td>295 m/s</td><td>ISA: 295.1</td><td>✓</td></tr>
+    </table>
+
+    <h2>Formula of each scene (and its source)</h2>
+    <table>
+      <tr><th>Scene</th><th>Physics</th><th>Source</th></tr>
+      <tr><td>Person</td><td>2nd/3rd laws; friction μ·N; reaction on planet F/M</td><td>Newton; Coulomb</td></tr>
+      <tr><td>Car</td><td>Power curve P=F/v, friction limit; drag ½ρCdAv²</td><td>Hibbeler; Gillespie</td></tr>
+      <tr><td>Airplane</td><td>Lift ½ρv²S·C<sub>L</sub>; polar + transonic wave drag; stall</td><td>Anderson</td></tr>
+      <tr><td>Rocket</td><td>Thrust ṁ·I<sub>sp</sub>·g₀; Tsiolkovsky; TWR; I<sub>sp</sub> vs. altitude</td><td>Sutton; Tsiolkovsky</td></tr>
+      <tr><td>.50 Rifle</td><td>Momentum m·v; energy ½mv²; drag Cd(Mach); Poncelet penetration; Coriolis 2Ωv·sinφ</td><td>McCoy; Poncelet</td></tr>
+      <tr><td>Skaters</td><td>Conservation of momentum; v∝1/m</td><td>Newton</td></tr>
+      <tr><td>Free Fall</td><td>m·g·h↔½mv²; terminal velocity; Collins crater; cube-root blast radius</td><td>Collins 2005; Glasstone</td></tr>
+    </table>
+
+    <h2>Numerical validations (examples)</h2>
+    <ul class="refs">
+      <li><strong>Tsiolkovsky:</strong> the simulated vacuum speed matches Δv = I<sub>sp</sub>·g₀·ln(m₀/m<sub>f</sub>) within &lt; 3 %.</li>
+      <li><strong>Energy conservation:</strong> car (motor = kinetic + dissipated), skaters (push = kinetic), airplane (motor = kinetic + potential + drag) - all within integration error.</li>
+      <li><strong>.50 BMG:</strong> muzzle energy ~16.6 kJ; steel penetration ~25-35 mm (real ~25-30 mm); a horizontal shot reaches the ground within a few hundred meters (½gt²).</li>
+      <li><strong>Impact/meteor:</strong> 500 t at 15 km/s ≈ 13 kton of TNT, ~280 m crater - Collins (2005) and Glasstone &amp; Dolan scaling.</li>
+    </ul>
+
+    <h2>Known simplifications (honest, not inventions)</h2>
+    <ul class="refs">
+      <li>Semi-implicit Euler integration (step ≤ 1/240 s): ~1-3 % error vs. analytic.</li>
+      <li>3rd law: the planet's acceleration is computed and shown, but the planet is not actually displaced (huge mass → invisible).</li>
+      <li>Constant rolling resistance; conservative sea-level I<sub>sp</sub> (260 s); single-lapse ISA stratosphere.</li>
+      <li>No meteor ablation/fragmentation on reentry (the drag deceleration is real).</li>
+    </ul>
+
+    <footer>Verdict: the physics is real and validated by tests. Nothing was made up - every number has a source.</footer>
+  </div>
+</body>
+</html>
